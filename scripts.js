@@ -561,6 +561,8 @@ function createEventCard(e, i, j) {
 function openJoinModal(i) { 
     currentEventIndex = i; 
     const e = upcomingEvents[i]; 
+    console.log('Event data:', e);
+    console.log('Event ID:', e.id);
     document.getElementById('modalTitle').textContent = `Join ${e.team.name}`; 
     document.getElementById('eventInfo').innerHTML = `<div style="display:flex;align-items:center;gap:15px;margin-bottom:15px"><div style="font-size:40px">${e.emoji}</div><div><h3 style="margin:0;font-size:20px">${e.name}</h3><p style="margin:0;color:#718096">${e.category} • ${e.difficulty}</p></div></div>`; 
     document.getElementById('requirementsList').innerHTML = `<li>• Min Reg Year: ${e.team.requirements.minRegNumber}</li><li>• Min Experience: ${e.team.requirements.minExperience} years</li>`; 
