@@ -150,25 +150,46 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
-function openTeamChat(teamName) {
+// In scripts.js, replace the entire openTeamChat function
+
+async function openTeamChat(teamName) {
     const chatModal = document.getElementById('chatModal');
     const chatModalTitle = document.getElementById('chatModalTitle');
     const chatMessages = document.getElementById('chatMessages');
     
     chatModalTitle.textContent = `${teamName} Chat`;
-    chatMessages.innerHTML = '<div class="chat-status" id="chatStatus">Connecting to chat...</div>';
-    
-    // Join the team chat room
-    joinTeamChat(teamName);
-    
-    // Show the modal
+    chatMessages.innerHTML = ''; // Clear previous messages
     chatModal.classList.add('active');
+    
+    // --- NEW: Load chat history ---
+    try {
+        const historyResult = await apiRequest(`/api/chat/${teamName}`);
+        if (historyResult.success) {
+            historyResult.data.forEach(message => displayChatMessage(message));
+        } else {
+            chatMessages.innerHTML = '<div class="chat-status">Could not load chat history.</div>';
+        }
+    } catch (error) {
+        logError('Failed to fetch chat history', error);
+    }
+    
+    // Join the team chat room via WebSocket
+    joinTeamChat(teamName);
 }
+
+// In scripts.js, replace the entire closeChatModal function
 
 function closeChatModal() {
     const chatModal = document.getElementById('chatModal');
     chatModal.classList.remove('active');
     currentChatTeam = null;
+    
+    // --- NEW: Close the WebSocket connection ---
+    if (websocket) {
+        logDebug('Closing WebSocket connection.');
+        websocket.close();
+        websocket = null;
+    }
 }
 
 function updateChatStatus(status) {
