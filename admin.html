@@ -366,6 +366,7 @@
         .close-btn:hover {
             color: #4a5568;
         }
+        
 
         .logout-btn {
             position: absolute;
@@ -400,6 +401,21 @@
             .stats-grid {
                 grid-template-columns: 1fr;
             }
+            /* Add this to the <style> block in your admin.html file */
+.category-form {
+    display: flex;
+    gap: 10px;
+}
+.category-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.category-list-item:last-child {
+    border-bottom: none;
+}
         }
     </style>
 </head>
@@ -457,6 +473,12 @@
                         Notifications
                     </a>
                 </li>
+                <li class="nav-item">
+    <a class="nav-link" onclick="showSection('categories')">
+        <span class="nav-icon">🏷️</span>
+        Categories
+    </a>
+</li>
             </ul>
             <button class="logout-btn" onclick="adminLogout()">Logout</button>
         </nav>
@@ -566,8 +588,28 @@
                     </form>
                 </div>
             </section>
+            <section class="admin-section" id="categories">
+    <div class="content-header">
+        <h1 class="content-title">Category Management</h1>
+        <p class="content-subtitle">Add or remove event categories</p>
+    </div>
+    <div class="card">
+        <h3>Add New Category</h3>
+        <form id="addCategoryForm" class="category-form">
+            <input type="text" class="form-input" id="categoryName" placeholder="New category name..." required>
+            <button type="submit" class="btn btn-primary">Add Category</button>
+        </form>
+    </div>
+    <div class="card">
+        <h3>Existing Categories</h3>
+        <div id="categoriesList">
+            <p>Loading categories...</p>
+        </div>
+    </div>
+</section>
         </main>
     </div>
+    
 
     <!-- Add Event Modal -->
     <div class="modal" id="addEventModal">
