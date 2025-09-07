@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SportsHub - College Sports Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="auth-container" id="authContainer">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo">🏆</div>
+                <h1>SportsHub</h1>
+                <p>College Sports Management</p>
+            </div>
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="loginTab">Login</button>
+                <button class="auth-tab" id="registerTab">Register</button>
+            </div>
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label class="form-label">College Email</label>
+                    <input type="email" class="form-input" id="loginEmail" placeholder="firstname.lastname@college.edu">
+                    <div class="error-message" id="loginEmailError"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="loginPassword" placeholder="Enter password (min 6 characters)">
+                    <div class="error-message" id="loginPasswordError"></div>
+                </div>
+                <button type="submit" class="auth-btn" id="loginBtn">Sign In</button>
+            </form>
+            <form id="registerForm" class="auth-form" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" class="form-input" id="regFullName" placeholder="Enter your full name">
+                    <div class="error-message" id="regFullNameError"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Student ID</label>
+                    <input type="text" class="form-input" id="regStudentID" placeholder="e.g., 2021CS001, 2022EC045">
+                    <div class="error-message" id="regStudentIDError"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">College Email</label>
+                    <input type="email" class="form-input" id="regEmail" placeholder="firstname.lastname@college.edu">
+                    <div class="error-message" id="regEmailError"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="regPassword" placeholder="Enter password (min 6 characters)">
+                    <div class="error-message" id="regPasswordError"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Confirm Password</label>
+                    <input type="password" class="form-input" id="regConfirmPassword" placeholder="Confirm password">
+                    <div class="error-message" id="regConfirmPasswordError"></div>
+                </div>
+                <button type="submit" class="auth-btn" id="registerBtn">Create Account</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="main-container" id="mainContainer" style="display: none;">
+        <header class="header">
+            <div class="header-content">
+                <div class="header-logo" onclick="showSection('dashboardSection')" style="cursor: pointer;">
+                    <div class="logo">🏆</div>
+                    <h1>SportsHub</h1>
+                </div>
+                <div class="header-user">
+                    <div class="notification-icon" id="notificationIcon">
+                        🔔
+                        <span class="notification-badge" id="notificationBadge"></span>
+                        <div class="notification-panel" id="notificationPanel">
+                            <div class="notification-panel-header"><h3>Notifications</h3></div>
+                            <ul class="notification-list" id="notificationList"></ul>
+                        </div>
+                    </div>
+                    <div class="user-info" onclick="showSection('profileSection')" style="cursor: pointer;">
+                        <div class="user-avatar" id="userAvatar"></div>
+                        <span id="userName"></span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="section active" id="dashboardSection">
+                <div class="welcome-section">
+                    <h2>Welcome back, <span id="welcomeUserName"></span>!</h2>
+                    <p>Ready to join some exciting tournaments?</p>
+                    <div class="stats-grid">
+                        <div class="stat-card"><h3>Current Registration</h3><p id="userRegNumber"></p></div>
+                        <div class="stat-card"><h3>Teams Joined</h3><p id="teamsJoinedCount"></p></div>
+                        <div class="stat-card"><h3>Available Events</h3><p></p></div>
+                    </div>
+                </div>
+                <div class="actions-grid">
+                    <div class="action-card" onclick="showSection('upcomingSection')"><div class="action-icon blue">📅</div><h3>Upcoming Events</h3><div class="count"></div></div>
+                    <div class="action-card" onclick="showSection('ongoingSection')"><div class="action-icon green">🏆</div><h3>Live Events</h3><div class="count">2</div></div>
+                    <div class="action-card" onclick="showSection('pastSection')"><div class="action-icon purple">🏅</div><h3>Past Events</h3><div class="count">3</div></div>
+                    <div class="action-card" onclick="showSection('myTeamsSection')"><div class="action-icon orange">👥</div><h3>My Teams</h3><div class="count" id="myTeamsCount"></div></div>
+                </div>
+            </div>
+            <div class="section" id="upcomingSection">
+                <div class="section-header"><div class="section-title"><h2>Upcoming Events</h2><p>Browse and join sports events</p></div><button class="back-btn" onclick="showSection('dashboardSection')">← Back to Dashboard</button></div>
+                <div class="search-filter"><input type="text" class="search-input" id="searchInput" placeholder="Search events..."><select class="filter-select" id="categoryFilter"><option value="all">All Categories</option><option value="cricket">Cricket</option><option value="football">Football</option><option value="badminton">Badminton</option></select></div>
+                <div class="events-grid" id="upcomingEventsGrid"></div>
+            </div>
+            <div class="section" id="ongoingSection">
+                <div class="section-header"><div class="section-title"><h2>Live Events</h2><p>Currently happening events</p></div><button class="back-btn" onclick="showSection('dashboardSection')">← Back to Dashboard</button></div>
+                <div class="events-grid" id="ongoingEventsGrid"></div>
+            </div>
+            <div class="section" id="pastSection">
+                <div class="section-header"><div class="section-title"><h2>Past Events</h2><p>Previously completed tournaments</p></div><button class="back-btn" onclick="showSection('dashboardSection')">← Back to Dashboard</button></div>
+                <div class="events-grid" id="pastEventsGrid"></div>
+            </div>
+            <div class="section" id="myTeamsSection">
+                <div class="section-header"><div class="section-title"><h2>My Teams</h2><p>All the teams you are a part of</p></div><button class="back-btn" onclick="showSection('dashboardSection')">← Back to Dashboard</button></div>
+                <div class="teams-grid" id="myTeamsGrid"></div>
+            </div>
+            <div class="section" id="profileSection">
+                <div class="section-header">
+                    <div class="section-title"><h2>My Profile</h2><p>View and manage your personal information</p></div>
+                    <button class="back-btn" onclick="showSection('dashboardSection')">← Back to Dashboard</button>
+                </div>
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <div class="profile-avatar-large" id="profileAvatarLarge"></div>
+                        <button class="avatar-change-btn" id="changePhotoButton">Change Photo</button>
+                    </div>
+                    <div class="profile-details" id="profileDetails">
+                        <div class="detail-item">
+                            <label>Full Name</label>
+                            <p class="view-mode" id="profileFullName"></p>
+                            <input class="edit-mode" type="text" id="editProfileFullName">
+                        </div>
+                        <div class="detail-item">
+                            <label>Registration Number</label>
+                            <p id="profileRegNumber"></p>
+                        </div>
+                        <div class="detail-item">
+                            <label>College Email</label>
+                            <p id="profileEmail"></p>
+                        </div>
+                        <div class="detail-item">
+                            <label>Mobile Number</label>
+                            <p class="view-mode" id="profileMobileNumber"></p>
+                            <input class="edit-mode" type="text" id="editProfileMobileNumber">
+                        </div>
+                    </div>
+                    <div class="profile-footer">
+                        <button class="edit-btn" id="editProfileButton">Edit Profile</button>
+                        <button class="logout-btn" id="logoutButton">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Join Team Modal -->
+    <div class="modal" id="joinModal">
+        <div class="modal-content">
+            <div class="modal-header"><h2 class="modal-title" id="modalTitle"></h2><button class="close-btn" onclick="closeJoinModal()">×</button></div>
+            <div class="event-info" id="eventInfo"></div>
+            <div class="requirements"><h4>Requirements</h4><ul id="requirementsList"></ul></div>
+            <div class="team-members"><h4>Current Team Members</h4><div class="members-list" id="membersList"></div></div>
+            <form class="application-form" id="applicationForm">
+                <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-input" id="applicantName" required></div>
+                <div class="form-group"><label class="form-label">Registration Number</label><input type="text" class="form-input" id="applicantRegNumber" required></div>
+                <div class="form-group"><label class="form-label">Years of Experience</label><input type="number" class="form-input" id="applicantExperience" min="0" required></div>
+                <div class="form-group"><label class="form-label">Student Email</label><input type="email" class="form-input" id="applicantEmail" required></div>
+                <div class="form-group form-group-full"><label class="form-label">Why do you want to join this team?</label><textarea class="form-textarea" id="applicantMotivation" rows="4"></textarea></div>
+                <button type="submit" class="submit-btn">Submit Application</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Team Chat Modal -->
+    <div class="modal" id="chatModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="chatModalTitle">Team Chat</h2>
+                <button class="close-btn" id="closeChatModalBtn">×</button>
+            </div>
+            <div class="chat-window">
+                <div class="chat-messages" id="chatMessages">
+                </div>
+                <form class="chat-input-form" id="chatForm">
+                    <input type="text" class="chat-input" id="chatMessageInput" placeholder="Type a message..." autocomplete="off" required>
+                    <button type="submit" class="chat-send-btn">Send</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+    <script src="scripts.js"></script>
+</body>
+</html>
