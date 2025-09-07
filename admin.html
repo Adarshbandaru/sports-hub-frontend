@@ -703,6 +703,8 @@
             document.getElementById('addEventForm').addEventListener('submit', handleAddEvent);
             document.getElementById('notificationForm').addEventListener('submit', handleSendNotification);
             document.getElementById('notificationTarget').addEventListener('change', handleNotificationTargetChange);
+            // Inside the setupEventListeners function in admin.html
+document.getElementById('addCategoryForm').addEventListener('submit', handleAddCategory);
         }
 
         // Admin Authentication
@@ -776,6 +778,9 @@
                     break;
                 case 'users':
                     loadUsersData();
+                    break;
+                case 'categories': // <-- ADD THIS CASE
+                    loadCategoriesData();
                     break;
             }
         }
@@ -994,6 +999,83 @@
                 document.getElementById('specificUserEmail').required = false;
             }
         }
+        // Add these new functions inside the <script> tag in admin.html
+
+async function loadCategoriesData() {
+    try {
+        const response = await fetch('https://sportshub-backend-fkye.onrender.com/api/admin/categories');
+        const categories = await response.json();
+        
+        const categoriesList = document.getElementById('categoriesList');
+        if (categories.length === 0) {
+            categoriesList.innerHTML = '<p>No categories found. Add one above!</p>';
+            return;
+        }
+
+        const listHTML = categories.map(cat => `
+            <div class="category-list-item">
+                <span>${cat.name}</span>
+                <button class="btn btn-danger" onclick="deleteCategory('${cat._id}')">Delete</button>
+            </div>
+        `).join('');
+        
+        categoriesList.innerHTML = listHTML;
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        document.getElementById('categoriesList').innerHTML = '<p>Error loading categories.</p>';
+    }
+}
+
+async function handleAddCategory(e) {
+    e.preventDefault();
+    const categoryNameInput = document.getElementById('categoryName');
+    const name = categoryNameInput.value.trim();
+
+    if (!name) {
+        return showNotification('Category name cannot be empty.', 'error');
+    }
+
+    try {
+        const response = await fetch('https://sportshub-backend-fkye.onrender.com/api/admin/categories', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            showNotification('Category added successfully!', 'success');
+            categoryNameInput.value = ''; // Clear the input
+            loadCategoriesData(); // Refresh the list
+        } else {
+            showNotification(result.message, 'error');
+        }
+    } catch (error) {
+        showNotification('Failed to add category.', 'error');
+    }
+}
+
+async function deleteCategory(categoryId) {
+    if (!confirm('Are you sure you want to delete this category?')) return;
+
+    try {
+        const response = await fetch(`https://sportshub-backend-fkye.onrender.com/api/admin/categories/${categoryId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+
+        if (response.ok) {
+            showNotification('Category deleted successfully!', 'success');
+            loadCategoriesData(); // Refresh the list
+        } else {
+            showNotification(result.message, 'error');
+        }
+    } catch (error) {
+        showNotification('Failed to delete category.', 'error');
+    }
+}
 
         async function handleSendNotification(e) {
             e.preventDefault();
