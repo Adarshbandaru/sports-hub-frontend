@@ -31,7 +31,7 @@ function initializeWebSocket() {
         return; // Already connected
     }
     
-    websocket = new WebSocket('ws://localhost:3000');
+    websocket = new WebSocket('wss://sportshub-backend-fkye.onrender.com');
     
     websocket.onopen = function() {
         console.log('Connected to WebSocket server');
@@ -197,7 +197,7 @@ async function showApp() {
 // --- FETCH DATA FROM BACKEND ---
 async function fetchAndRenderUpcomingEvents() {
     try {
-        const response = await fetch('http://localhost:3000/api/events');
+        const response = await fetch('https://sportshub-backend-fkye.onrender.com/api/events');
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         upcomingEvents = await response.json();
         renderEvents(filterEvents(upcomingEvents), 'upcomingEventsGrid', true);
@@ -272,7 +272,7 @@ async function handleLogin(e) {
         password: document.getElementById('loginPassword').value
     };
     try {
-        const response = await fetch('http://localhost:3000/api/login', {
+        const response = await fetch('https://sportshub-backend-fkye.onrender.com/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData)
@@ -309,7 +309,7 @@ async function handleRegister(e) {
         password: document.getElementById('regPassword').value
     };
     try {
-        const response = await fetch('http://localhost:3000/api/register', {
+        const response = await fetch('https://sportshub-backend-fkye.onrender.com/api/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData)
