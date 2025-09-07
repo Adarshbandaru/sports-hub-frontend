@@ -15,14 +15,36 @@ const pastEvents = [
     { id: 8, name: "Girls Hockey League", date: "2025-08-15", emoji: "🏑" } 
 ];
 
+// --- CONFIGURATION ---
+const API_BASE_URL = 'https://sportshub-backend-fkye.onrender.com';
+
+// --- UTILITY FUNCTIONS ---
+function logDebug(message, data = null) {
+    console.log(`[DEBUG] ${message}`, data);
+}
+
+function logError(message, error = null) {
+    console.error(`[ERROR] ${message}`, error);
+}
+
 // --- DATA PERSISTENCE ---
 function saveData() { 
-    localStorage.setItem('sportsHubUser', JSON.stringify(currentUser)); 
+    if (currentUser) {
+        localStorage.setItem('sportsHubUser', JSON.stringify(currentUser)); 
+    }
 }
 
 function loadData() { 
-    const d = localStorage.getItem('sportsHubUser'); 
-    if (d) currentUser = JSON.parse(d); 
+    const data = localStorage.getItem('sportsHubUser'); 
+    if (data) {
+        try {
+            currentUser = JSON.parse(data);
+            logDebug('User data loaded from localStorage', currentUser);
+        } catch (error) {
+            logError('Failed to parse user data from localStorage', error);
+            localStorage.removeItem('sportsHubUser');
+        }
+    }
 }
 
 // --- WEBSOCKET FUNCTIONS ---
@@ -31,10 +53,11 @@ function initializeWebSocket() {
         return; // Already connected
     }
     
-    websocket = new WebSocket('wss://sportshub-backend-fkye.onrender.com');
+    const wsUrl = API_BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://');
+    websocket = new WebSocket(wsUrl);
     
     websocket.onopen = function() {
-        console.log('Connected to WebSocket server');
+        logDebug('Connected to WebSocket server');
         updateChatStatus('connected');
     };
     
@@ -45,19 +68,19 @@ function initializeWebSocket() {
                 displayChatMessage(data);
             }
         } catch (error) {
-            console.error('Error parsing WebSocket message:', error);
+            logError('Error parsing WebSocket message', error);
         }
     };
     
     websocket.onclose = function() {
-        console.log('WebSocket connection closed');
+        logDebug('WebSocket connection closed');
         updateChatStatus('disconnected');
         // Attempt to reconnect after 3 seconds
         setTimeout(initializeWebSocket, 3000);
     };
     
     websocket.onerror = function(error) {
-        console.error('WebSocket error:', error);
+        logError('WebSocket error', error);
         updateChatStatus('disconnected');
     };
 }
@@ -166,11 +189,51 @@ function updateChatStatus(status) {
     }
 }
 
+// --- API FUNCTIONS ---
+async function apiRequest(endpoint, options = {}) {
+    const url = `${API_BASE_URL}${endpoint}`;
+    logDebug(`Making API request to: ${url}`, options);
+    
+    const defaultOptions = {
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    };
+    
+    const finalOptions = {
+        ...defaultOptions,
+        ...options,
+        headers: {
+            ...defaultOptions.headers,
+            ...options.headers
+        }
+    };
+    
+    try {
+        const response = await fetch(url, finalOptions);
+        const data = await response.json();
+        
+        logDebug(`API Response (${response.status}):`, data);
+        
+        if (!response.ok) {
+            throw new Error(data.message || `HTTP error! status: ${response.status}`);
+        }
+        
+        return { success: true, data, status: response.status };
+    } catch (error) {
+        logError(`API request failed for ${endpoint}`, error);
+        return { success: false, error: error.message };
+    }
+}
+
 // --- INITIALIZATION ---
 function init() {
+    logDebug('Initializing application');
     setupEventListeners();
     setupChatEventListeners();
     loadData();
+    
     if (currentUser) { 
         showApp();
         initializeWebSocket();
@@ -188,51 +251,113 @@ async function showApp() {
     document.getElementById('authContainer').style.display = 'none';
     document.getElementById('mainContainer').style.display = 'block';
     
-    await fetchAndRenderUpcomingEvents();
+    await fetchAndRenderUpcomingEventsWithRetry();
     renderEvents(ongoingEvents, 'ongoingEventsGrid');
     renderEvents(pastEvents, 'pastEventsGrid');
     updateUIForUser();
 }
 
 // --- FETCH DATA FROM BACKEND ---
-async function fetchAndRenderUpcomingEvents() {
-    try {
-        const response = await fetch('https://sportshub-backend-fkye.onrender.com/api/events');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        upcomingEvents = await response.json();
-        renderEvents(filterEvents(upcomingEvents), 'upcomingEventsGrid', true);
-        // Update dashboard counts after fetching
-        document.querySelector('.action-card:nth-child(1) .count').textContent = upcomingEvents.length;
-        document.querySelector('.stat-card:nth-child(3) p').textContent = upcomingEvents.length;
-    } catch (error) { 
-        console.error("Could not fetch upcoming events:", error);
+async function fetchAndRenderUpcomingEventsWithRetry() {
+    const maxRetries = 3;
+    let lastError;
+    
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            logDebug(`Fetch attempt ${i + 1}/${maxRetries}`);
+            
+            const result = await apiRequest('/api/events');
+            
+            if (!result.success) {
+                throw new Error(result.error);
+            }
+            
+            const events = result.data;
+            logDebug('Successfully fetched events:', events.length);
+            
+            // Validate event structure
+            const validEvents = events.filter(event => {
+                const isValid = event.id != null && event.team != null;
+                if (!isValid) {
+                    logError('Invalid event structure:', event);
+                }
+                return isValid;
+            });
+            
+            if (validEvents.length !== events.length) {
+                logError(`Filtered out ${events.length - validEvents.length} invalid events`);
+            }
+            
+            upcomingEvents = validEvents;
+            renderEvents(filterEvents(upcomingEvents), 'upcomingEventsGrid', true);
+            
+            // Update dashboard counts
+            const actionCard = document.querySelector('.action-card:nth-child(1) .count');
+            const statCard = document.querySelector('.stat-card:nth-child(3) p');
+            if (actionCard) actionCard.textContent = upcomingEvents.length;
+            if (statCard) statCard.textContent = upcomingEvents.length;
+            
+            return; // Success, exit retry loop
+            
+        } catch (error) {
+            logError(`Fetch attempt ${i + 1} failed:`, error);
+            lastError = error;
+            
+            if (i < maxRetries - 1) {
+                // Wait before retry (exponential backoff)
+                await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+            }
+        }
     }
+    
+    // All retries failed
+    logError('All fetch attempts failed:', lastError);
+    showNotification('Failed to load events after multiple attempts. Please check your connection.', 'error');
+}
+
+// Backward compatibility
+async function fetchAndRenderUpcomingEvents() {
+    return await fetchAndRenderUpcomingEventsWithRetry();
 }
 
 // --- EVENT LISTENERS ---
 function setupEventListeners() {
     setupAuthTabs();
     setupFormValidation();
+    
+    // Form submissions
     document.getElementById('loginForm').addEventListener('submit', handleLogin);
     document.getElementById('registerForm').addEventListener('submit', handleRegister);
     document.getElementById('applicationForm').addEventListener('submit', handleApplication);
-    document.getElementById('searchInput').addEventListener('input', () => renderEvents(filterEvents(upcomingEvents), 'upcomingEventsGrid', true));
-    document.getElementById('categoryFilter').addEventListener('change', () => renderEvents(filterEvents(upcomingEvents), 'upcomingEventsGrid', true));
+    
+    // Search and filter
+    const searchInput = document.getElementById('searchInput');
+    const categoryFilter = document.getElementById('categoryFilter');
+    if (searchInput) searchInput.addEventListener('input', () => renderEvents(filterEvents(upcomingEvents), 'upcomingEventsGrid', true));
+    if (categoryFilter) categoryFilter.addEventListener('change', () => renderEvents(filterEvents(upcomingEvents), 'upcomingEventsGrid', true));
+    
+    // Profile actions
     document.getElementById('changePhotoButton').addEventListener('click', handleChangePhoto);
     document.getElementById('logoutButton').addEventListener('click', handleLogout);
     document.getElementById('editProfileButton').addEventListener('click', handleEditProfileClick);
     
+    // Notification panel
     const notifIcon = document.getElementById('notificationIcon');
     const notifPanel = document.getElementById('notificationPanel');
-    notifIcon.addEventListener('click', (e) => { 
-        e.stopPropagation(); 
-        const isVisible = notifPanel.classList.toggle('show'); 
-        if (isVisible) renderNotifications(); 
-    });
+    
+    if (notifIcon && notifPanel) {
+        notifIcon.addEventListener('click', (e) => { 
+            e.stopPropagation(); 
+            const isVisible = notifPanel.classList.toggle('show'); 
+            if (isVisible) renderNotifications(); 
+        });
+    }
+    
+    // Click outside handlers
     window.addEventListener('click', (e) => { 
         if (e.target.id === 'joinModal') closeJoinModal(); 
         if (e.target.id === 'chatModal') closeChatModal();
-        if (notifIcon && !notifIcon.contains(e.target)) {
+        if (notifIcon && notifPanel && !notifIcon.contains(e.target)) {
             notifPanel.classList.remove('show');
         } 
     });
@@ -264,40 +389,46 @@ function setupChatEventListeners() {
 // --- AUTHENTICATION HANDLERS ---
 async function handleLogin(e) {
     e.preventDefault();
+    logDebug('Handling login attempt');
+    
     if (!validateLoginEmail() || !validateLoginPassword()) {
         return showNotification('Please fix the errors above', 'error');
     }
+    
     const formData = {
         email: document.getElementById('loginEmail').value,
         password: document.getElementById('loginPassword').value
     };
-    try {
-        const response = await fetch('https://sportshub-backend-fkye.onrender.com/api/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
-        });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.message);
-
+    
+    const result = await apiRequest('/api/login', {
+        method: 'POST',
+        body: JSON.stringify(formData)
+    });
+    
+    if (result.success) {
         currentUser = {
-            ...result.user,
-            avatarUrl: null,
-            joinedTeams: [],
-            notifications: [{ icon: "🏆", title: `Welcome back, ${result.user.fullName}!`, body: "Explore events and join the fun." }]
+            ...result.data.user,
+            avatarUrl: result.data.user.avatarUrl || null,
+            joinedTeams: result.data.user.joinedTeams || [],
+            notifications: result.data.user.notifications || [{ 
+                icon: "🏆", 
+                title: `Welcome back, ${result.data.user.fullName}!`, 
+                body: "Explore events and join the fun." 
+            }]
         };
         saveData();
         showApp();
         initializeWebSocket();
-        showNotification(result.message, 'success');
-    } catch (error) {
-        console.error('Login failed:', error);
-        showNotification(error.message, 'error');
+        showNotification(result.data.message, 'success');
+    } else {
+        showNotification(result.error, 'error');
     }
 }
 
 async function handleRegister(e) {
     e.preventDefault();
+    logDebug('Handling registration attempt');
+    
     const fields = ['regFullName', 'regStudentID', 'regEmail', 'regPassword', 'regConfirmPassword'];
     const allValid = fields.every(id => validateRegisterField(id, document.getElementById(id).value));
     if (!allValid) return showNotification('Please fix the errors above', 'error');
@@ -308,25 +439,23 @@ async function handleRegister(e) {
         email: document.getElementById('regEmail').value,
         password: document.getElementById('regPassword').value
     };
-    try {
-        const response = await fetch('https://sportshub-backend-fkye.onrender.com/api/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
-        });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.message);
-        
+    
+    const result = await apiRequest('/api/register', {
+        method: 'POST',
+        body: JSON.stringify(formData)
+    });
+    
+    if (result.success) {
         showNotification('Registration successful! Please login now.', 'success');
         document.getElementById('loginTab').click();
         document.getElementById('registerForm').reset();
-    } catch (error) {
-        console.error('Registration failed:', error);
-        showNotification(error.message, 'error');
+    } else {
+        showNotification(result.error, 'error');
     }
 }
 
 function handleLogout() {
+    logDebug('Handling logout');
     currentUser = null;
     localStorage.removeItem('sportsHubUser');
     if (websocket) {
@@ -358,23 +487,22 @@ async function handleEditProfileClick() {
             fullName: document.getElementById('editProfileFullName').value,
             mobileNumber: document.getElementById('editProfileMobileNumber').value
         };
-        try {
-            const response = await fetch('https://sportshub-backend-fkye.onrender.com/api/profile/update', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedData)
-            });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.message);
-            
-            currentUser.fullName = result.user.fullName;
-            currentUser.mobileNumber = result.user.mobileNumber;
+        
+        const result = await apiRequest('/api/profile/update', {
+            method: 'POST',
+            body: JSON.stringify(updatedData)
+        });
+        
+        if (result.success) {
+            currentUser.fullName = result.data.user.fullName;
+            currentUser.mobileNumber = result.data.user.mobileNumber;
             saveData();
             renderProfile();
-            showNotification(result.message, 'success');
-        } catch (error) {
-            showNotification(error.message, 'error');
+            showNotification(result.data.message, 'success');
+        } else {
+            showNotification(result.error, 'error');
         }
+        
         editButton.textContent = 'Edit Profile';
         profileCard.classList.remove('is-editing');
     } else {
@@ -388,51 +516,88 @@ async function handleEditProfileClick() {
 // --- TEAM & APPLICATION LOGIC ---
 async function handleApplication(e) {
     e.preventDefault();
+    logDebug('Handling application submission');
+    
     const event = upcomingEvents[currentEventIndex];
+    
+    // Comprehensive debugging
+    logDebug('Current event index:', currentEventIndex);
+    logDebug('Total upcoming events:', upcomingEvents.length);
+    logDebug('Event object:', event);
+    logDebug('Event ID type:', typeof event?.id);
+    logDebug('Event ID value:', event?.id);
+    
+    if (!event) {
+        logError('Event is null or undefined');
+        showNotification('Event data is missing. Please refresh and try again.', 'error');
+        return;
+    }
+    
+    if (!event.id && event.id !== 0) {
+        logError('Event ID is missing or invalid');
+        showNotification('Event ID is missing. Please refresh and try again.', 'error');
+        return;
+    }
+    
+    if (!event.team) {
+        logError('Event team is missing');
+        showNotification('Team information is missing. Please refresh and try again.', 'error');
+        return;
+    }
+    
     const applicationData = {
         userFullName: currentUser.fullName,
         userRegNumber: document.getElementById('applicantRegNumber').value,
         userExperience: parseInt(document.getElementById('applicantExperience').value)
     };
-    try {
-        const response = await fetch(`https://sportshub-backend-fkye.onrender.com/api/events/${event.id}/join`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(applicationData)
+    
+    logDebug('Application data:', applicationData);
+    logDebug('API URL that will be called:', `/api/events/${event.id}/join`);
+    
+    const result = await apiRequest(`/api/events/${event.id}/join`, {
+        method: 'POST',
+        body: JSON.stringify(applicationData)
+    });
+    
+    if (result.success) {
+        currentUser.joinedTeams.push({ 
+            eventId: event.id,
+            eventName: event.name, 
+            teamName: event.team.name, 
+            emoji: event.emoji 
         });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.message);
-        
-        currentUser.joinedTeams.push({ eventName: event.name, teamName: event.team.name, emoji: event.emoji });
         saveData();
         await fetchAndRenderUpcomingEvents();
         updateUIForUser();
         closeJoinModal();
-        showNotification(result.message, 'success');
-    } catch (error) {
-        showNotification(error.message, 'error');
+        showNotification(result.data.message, 'success');
+    } else {
+        showNotification(result.error, 'error');
     }
 }
 
 async function handleLeaveTeam(teamName) {
     if (!currentUser || !confirm(`Are you sure you want to leave ${teamName}?`)) return;
-    try {
-        const response = await fetch(`https://sportshub-backend-fkye.onrender.com/api/teams/leave`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userFullName: currentUser.fullName, teamName })
-        });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.message);
-
+    
+    logDebug('Handling leave team:', teamName);
+    
+    const result = await apiRequest('/api/teams/leave', {
+        method: 'POST',
+        body: JSON.stringify({ 
+            userFullName: currentUser.fullName, 
+            teamName 
+        })
+    });
+    
+    if (result.success) {
         currentUser.joinedTeams = currentUser.joinedTeams.filter(team => team.teamName !== teamName);
         saveData();
         await fetchAndRenderUpcomingEvents();
         updateUIForUser();
         renderMyTeams();
-        showNotification(result.message, 'success');
-    } catch (error) {
-        showNotification(error.message, 'error');
+        showNotification(result.data.message, 'success');
+    } else {
+        showNotification(result.error, 'error');
     }
 }
 
@@ -440,6 +605,9 @@ async function handleLeaveTeam(teamName) {
 function setupAuthTabs() { 
     const lT = document.getElementById('loginTab'), rT = document.getElementById('registerTab'), 
           lF = document.getElementById('loginForm'), rF = document.getElementById('registerForm'); 
+    
+    if (!lT || !rT || !lF || !rF) return;
+    
     lT.addEventListener('click', () => { 
         lT.classList.add('active'); rT.classList.remove('active'); 
         lF.style.display = 'block'; rF.style.display = 'none'; 
@@ -451,15 +619,25 @@ function setupAuthTabs() {
 }
 
 function setupFormValidation() { 
-    document.getElementById('loginEmail').addEventListener('input', validateLoginEmail); 
-    document.getElementById('loginPassword').addEventListener('input', validateLoginPassword);
+    const loginEmail = document.getElementById('loginEmail');
+    const loginPassword = document.getElementById('loginPassword');
+    
+    if (loginEmail) loginEmail.addEventListener('input', validateLoginEmail); 
+    if (loginPassword) loginPassword.addEventListener('input', validateLoginPassword);
+    
     ['regFullName', 'regStudentID', 'regEmail', 'regPassword', 'regConfirmPassword'].forEach(id => { 
-        document.getElementById(id).addEventListener('input', (e) => validateRegisterField(id, e.target.value)); 
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('input', (e) => validateRegisterField(id, e.target.value)); 
+        }
     });
 }
 
 function validateLoginEmail() { 
-    const e = document.getElementById('loginEmail'), r = document.getElementById('loginEmailError'); 
+    const e = document.getElementById('loginEmail');
+    const r = document.getElementById('loginEmailError'); 
+    if (!e || !r) return true;
+    
     if (!e.value) { setFieldError(e, r, ''); return false; } 
     if (!/^[a-zA-Z0-9]+\.[a-zA-Z0-9]+@college\.edu$/.test(e.value)) { 
         setFieldError(e, r, 'Format: name.surname@college.edu'); return false; 
@@ -468,17 +646,34 @@ function validateLoginEmail() {
 }
 
 function validateLoginPassword() { 
-    const p = document.getElementById('loginPassword'), e = document.getElementById('loginPasswordError'); 
+    const p = document.getElementById('loginPassword');
+    const e = document.getElementById('loginPasswordError'); 
+    if (!p || !e) return true;
+    
     if (!p.value) { setFieldError(p, e, ''); return false; } 
     if (p.value.length < 6) { setFieldError(p, e, 'Password must be >= 6 characters'); return false; } 
     setFieldSuccess(p, e); return true; 
 }
 
-function setFieldError(i, e, m) { i.classList.add('error'); e.textContent = m; }
-function setFieldSuccess(i, e) { i.classList.remove('error'); e.textContent = ''; }
+function setFieldError(i, e, m) { 
+    if (i && e) {
+        i.classList.add('error'); 
+        e.textContent = m; 
+    }
+}
+
+function setFieldSuccess(i, e) { 
+    if (i && e) {
+        i.classList.remove('error'); 
+        e.textContent = ''; 
+    }
+}
 
 function validateRegisterField(f, v) { 
-    const i = document.getElementById(f), e = document.getElementById(f + 'Error'); 
+    const i = document.getElementById(f);
+    const e = document.getElementById(f + 'Error'); 
+    if (!i || !e) return true;
+    
     let a = true; 
     switch (f) { 
         case 'regFullName': 
@@ -496,7 +691,8 @@ function validateRegisterField(f, v) {
             if (v.length < 6) { setFieldError(i, e, 'Password must be >= 6 characters'); a = false; } 
             break; 
         case 'regConfirmPassword': 
-            if (v !== document.getElementById('regPassword').value) { 
+            const passwordField = document.getElementById('regPassword');
+            if (passwordField && v !== passwordField.value) { 
                 setFieldError(i, e, 'Passwords do not match'); a = false; 
             } 
             break; 
@@ -508,18 +704,31 @@ function validateRegisterField(f, v) {
 // --- UI UPDATE & RENDERING ---
 function updateUIForUser() { 
     if (!currentUser) return; 
-    document.getElementById('userName').textContent = currentUser.fullName; 
-    document.getElementById('welcomeUserName').textContent = currentUser.fullName; 
-    document.getElementById('userRegNumber').textContent = currentUser.studentID; 
-    document.getElementById('teamsJoinedCount').textContent = currentUser.joinedTeams.length; 
-    document.getElementById('myTeamsCount').textContent = currentUser.joinedTeams.length; 
-    document.getElementById('notificationBadge').textContent = currentUser.notifications.length; 
+    
+    const elements = {
+        userName: document.getElementById('userName'),
+        welcomeUserName: document.getElementById('welcomeUserName'),
+        userRegNumber: document.getElementById('userRegNumber'),
+        teamsJoinedCount: document.getElementById('teamsJoinedCount'),
+        myTeamsCount: document.getElementById('myTeamsCount'),
+        notificationBadge: document.getElementById('notificationBadge')
+    };
+    
+    if (elements.userName) elements.userName.textContent = currentUser.fullName; 
+    if (elements.welcomeUserName) elements.welcomeUserName.textContent = currentUser.fullName; 
+    if (elements.userRegNumber) elements.userRegNumber.textContent = currentUser.studentID; 
+    if (elements.teamsJoinedCount) elements.teamsJoinedCount.textContent = currentUser.joinedTeams.length; 
+    if (elements.myTeamsCount) elements.myTeamsCount.textContent = currentUser.joinedTeams.length; 
+    if (elements.notificationBadge) elements.notificationBadge.textContent = currentUser.notifications.length; 
+    
     updateUserAvatar(); 
 }
 
 function updateUserAvatar() { 
-    const s = document.getElementById('userAvatar'), l = document.getElementById('profileAvatarLarge'); 
-    if(!s || !l) return; 
+    const s = document.getElementById('userAvatar');
+    const l = document.getElementById('profileAvatarLarge'); 
+    if(!s || !l || !currentUser) return; 
+    
     const i = currentUser.fullName.split(' ').map(n => n[0]).join('').toUpperCase(); 
     [s, l].forEach(el => { 
         if (currentUser.avatarUrl) { 
@@ -535,6 +744,7 @@ function updateUserAvatar() {
 function renderEvents(e, c, j) { 
     const t = document.getElementById(c); 
     if(!t) return; 
+    
     t.innerHTML = ''; 
     if (e.length === 0) { 
         t.innerHTML = `<div class="no-data-placeholder"><h3>No events found</h3></div>`; 
@@ -560,38 +770,99 @@ function createEventCard(e, i, j) {
 
 function openJoinModal(i) { 
     currentEventIndex = i; 
-    const e = upcomingEvents[i]; 
-    console.log('Event data:', e);
-    console.log('Event ID:', e.id);
-    document.getElementById('modalTitle').textContent = `Join ${e.team.name}`; 
-    document.getElementById('eventInfo').innerHTML = `<div style="display:flex;align-items:center;gap:15px;margin-bottom:15px"><div style="font-size:40px">${e.emoji}</div><div><h3 style="margin:0;font-size:20px">${e.name}</h3><p style="margin:0;color:#718096">${e.category} • ${e.difficulty}</p></div></div>`; 
-    document.getElementById('requirementsList').innerHTML = `<li>• Min Reg Year: ${e.team.requirements.minRegNumber}</li><li>• Min Experience: ${e.team.requirements.minExperience} years</li>`; 
-    const m = document.getElementById('membersList'); 
-    m.innerHTML = ''; 
-    e.team.members.forEach(b => { 
-        const d = document.createElement('div'); 
-        d.className = 'member-item'; 
-        d.innerHTML = `<div class="member-avatar">${b.split(' ').map(n => n[0]).join('')}</div><span>${b}</span>`; 
-        m.appendChild(d); 
-    }); 
-    if (currentUser) { 
-        document.getElementById('applicantName').value = currentUser.fullName; 
-        document.getElementById('applicantRegNumber').value = currentUser.studentID; 
-        document.getElementById('applicantEmail').value = currentUser.email; 
-    } 
-    document.getElementById('joinModal').classList.add('active'); 
+    const event = upcomingEvents[i]; 
+    
+    // Enhanced debugging
+    logDebug('Opening modal for event index:', i);
+    logDebug('Event data:', event);
+    logDebug('Event ID:', event?.id);
+    logDebug('Total events:', upcomingEvents.length);
+    
+    if (!event) {
+        showNotification('Event not found. Please refresh the page.', 'error');
+        return;
+    }
+    
+    if (!event.team) {
+        showNotification('Team information not available for this event.', 'error');
+        return;
+    }
+    
+    const modalTitle = document.getElementById('modalTitle');
+    const eventInfo = document.getElementById('eventInfo');
+    const requirementsList = document.getElementById('requirementsList');
+    const membersList = document.getElementById('membersList');
+    
+    if (modalTitle) modalTitle.textContent = `Join ${event.team.name}`;
+    
+    if (eventInfo) {
+        eventInfo.innerHTML = `
+            <div style="display:flex;align-items:center;gap:15px;margin-bottom:15px">
+                <div style="font-size:40px">${event.emoji}</div>
+                <div>
+                    <h3 style="margin:0;font-size:20px">${event.name}</h3>
+                    <p style="margin:0;color:#718096">${event.category} • ${event.difficulty}</p>
+                </div>
+            </div>
+        `;
+    }
+    
+    if (requirementsList) {
+        requirementsList.innerHTML = `
+            <li>• Min Reg Year: ${event.team.requirements.minRegNumber}</li>
+            <li>• Min Experience: ${event.team.requirements.minExperience} years</li>
+        `;
+    }
+    
+    if (membersList) {
+        membersList.innerHTML = '';
+        event.team.members.forEach(member => {
+            const d = document.createElement('div');
+            d.className = 'member-item';
+            d.innerHTML = `
+                <div class="member-avatar">${member.split(' ').map(n => n[0]).join('')}</div>
+                <span>${member}</span>
+            `;
+            membersList.appendChild(d);
+        });
+    }
+    
+    if (currentUser) {
+        const applicantName = document.getElementById('applicantName');
+        const applicantRegNumber = document.getElementById('applicantRegNumber');
+        const applicantEmail = document.getElementById('applicantEmail');
+        
+        if (applicantName) applicantName.value = currentUser.fullName;
+        if (applicantRegNumber) applicantRegNumber.value = currentUser.studentID;
+        if (applicantEmail) applicantEmail.value = currentUser.email;
+    }
+    
+    const joinModal = document.getElementById('joinModal');
+    if (joinModal) joinModal.classList.add('active');
 }
 
 function closeJoinModal() { 
-    document.getElementById('joinModal').classList.remove('active'); 
-    document.getElementById('applicationForm').reset(); 
+    const joinModal = document.getElementById('joinModal');
+    const applicationForm = document.getElementById('applicationForm');
+    
+    if (joinModal) joinModal.classList.remove('active');
+    if (applicationForm) applicationForm.reset();
     currentEventIndex = null; 
 }
 
 function showSection(s) { 
     document.querySelectorAll('.section').forEach(e => e.classList.remove('active')); 
-    document.getElementById(s).classList.add('active'); 
-    switch (s) { 
+    const targetSection = document.getElementById(s);
+    if (targetSection) targetSection.classList.add('active');
+    
+    // Update active nav link if called from navigation
+    if (event && event.target) {
+        document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+    
+    // Load section-specific data
+    switch(s) { 
         case 'upcomingSection': 
             renderEvents(filterEvents(upcomingEvents), 'upcomingEventsGrid', true); 
             break; 
@@ -612,55 +883,157 @@ function showSection(s) {
 
 function renderMyTeams() { 
     const c = document.getElementById('myTeamsGrid'); 
+    if (!c) return;
+    
     if (!currentUser || currentUser.joinedTeams.length === 0) { 
         c.innerHTML = `<div class="no-data-placeholder"><h3>No Teams Joined Yet</h3></div>`; 
         return; 
     } 
+    
     c.innerHTML = ''; 
     currentUser.joinedTeams.forEach(t => { 
         const d = document.createElement('div'); 
         d.className = 'team-card'; 
-        d.innerHTML = `<div class="team-card-header"><div class="team-card-emoji">${t.emoji}</div><h3>${t.teamName}</h3></div><div class="team-card-body"><p><strong>Event:</strong> ${t.eventName}</p></div><div class="team-card-footer"><button class="chat-btn" onclick="openTeamChat('${t.teamName}')">Team Chat</button><button class="leave-btn" onclick="handleLeaveTeam('${t.teamName}')">Leave Team</button></div>`; 
+        d.innerHTML = `
+            <div class="team-card-header">
+                <div class="team-card-emoji">${t.emoji}</div>
+                <h3>${t.teamName}</h3>
+            </div>
+            <div class="team-card-body">
+                <p><strong>Event:</strong> ${t.eventName}</p>
+            </div>
+            <div class="team-card-footer">
+                <button class="chat-btn" onclick="openTeamChat('${t.teamName}')">Team Chat</button>
+                <button class="leave-btn" onclick="handleLeaveTeam('${t.teamName}')">Leave Team</button>
+            </div>
+        `; 
         c.appendChild(d); 
     }); 
 }
 
 function renderProfile() { 
     if (!currentUser) return; 
-    document.getElementById('profileFullName').textContent = currentUser.fullName; 
-    document.getElementById('profileRegNumber').textContent = currentUser.studentID; 
-    document.getElementById('profileEmail').textContent = currentUser.email; 
-    document.getElementById('profileMobileNumber').textContent = currentUser.mobileNumber || "Not provided"; 
+    
+    const elements = {
+        profileFullName: document.getElementById('profileFullName'),
+        profileRegNumber: document.getElementById('profileRegNumber'),
+        profileEmail: document.getElementById('profileEmail'),
+        profileMobileNumber: document.getElementById('profileMobileNumber')
+    };
+    
+    if (elements.profileFullName) elements.profileFullName.textContent = currentUser.fullName;
+    if (elements.profileRegNumber) elements.profileRegNumber.textContent = currentUser.studentID;
+    if (elements.profileEmail) elements.profileEmail.textContent = currentUser.email;
+    if (elements.profileMobileNumber) elements.profileMobileNumber.textContent = currentUser.mobileNumber || "Not provided";
+    
     updateUserAvatar(); 
 }
 
 function renderNotifications() { 
     const l = document.getElementById('notificationList'); 
+    if (!l) return;
+    
     l.innerHTML = ''; 
     if (!currentUser || currentUser.notifications.length === 0) { 
         l.innerHTML = `<li class="notification-item-empty">No new notifications</li>`; 
         return; 
     } 
+    
     currentUser.notifications.forEach(n => { 
         const i = document.createElement('li'); 
         i.className = 'notification-item'; 
-        i.innerHTML = `<div class="notification-item-icon">${n.icon}</div><div class="notification-item-content"><h4>${n.title}</h4><p>${n.body}</p></div>`; 
+        i.innerHTML = `
+            <div class="notification-item-icon">${n.icon}</div>
+            <div class="notification-item-content">
+                <h4>${n.title}</h4>
+                <p>${n.body}</p>
+            </div>
+        `; 
         l.appendChild(i); 
     }); 
 }
 
 function filterEvents(e) { 
-    const s = document.getElementById('searchInput')?.value.toLowerCase() || '', 
-          c = document.getElementById('categoryFilter')?.value || 'all'; 
-    return e.filter(v => (v.name.toLowerCase().includes(s) || v.category.toLowerCase().includes(s)) && (c === 'all' || v.category.toLowerCase() === c)); 
+    const searchInput = document.getElementById('searchInput');
+    const categoryFilter = document.getElementById('categoryFilter');
+    
+    const s = searchInput ? searchInput.value.toLowerCase() : '';
+    const c = categoryFilter ? categoryFilter.value : 'all';
+    
+    return e.filter(v => {
+        const matchesSearch = v.name.toLowerCase().includes(s) || v.category.toLowerCase().includes(s);
+        const matchesCategory = c === 'all' || v.category.toLowerCase() === c;
+        return matchesSearch && matchesCategory;
+    });
 }
 
 function showNotification(m, t = 'success') { 
     const n = document.getElementById('notification'); 
+    if (!n) return;
+    
     n.textContent = m; 
     n.className = `notification ${t} show`; 
     setTimeout(() => n.classList.remove('show'), 3000); 
 }
+
+// --- API CONNECTION TESTING ---
+async function testAPIConnection() {
+    try {
+        logDebug('Testing API connection...');
+        const result = await apiRequest('/api/events');
+        
+        if (result.success) {
+            const events = result.data;
+            logDebug('API Response successful');
+            logDebug('Events data:', events);
+            
+            if (events && events.length > 0) {
+                logDebug('First event structure:', events[0]);
+                logDebug('Event has ID?', 'id' in events[0], events[0].id);
+                logDebug('Event has team?', 'team' in events[0], events[0].team);
+            }
+            showNotification('API connection successful!', 'success');
+        } else {
+            logError('API connection failed:', result.error);
+            showNotification('API connection failed: ' + result.error, 'error');
+        }
+    } catch (error) {
+        logError('API connection test failed:', error);
+        showNotification('API connection test failed', 'error');
+    }
+}
+
+// --- DEBUGGING HELPER ---
+window.addEventListener('load', function() {
+    // Add a temporary test button for debugging in development
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        const testButton = document.createElement('button');
+        testButton.textContent = 'Test API';
+        testButton.style.position = 'fixed';
+        testButton.style.top = '10px';
+        testButton.style.left = '10px';
+        testButton.style.zIndex = '9999';
+        testButton.style.background = '#667eea';
+        testButton.style.color = 'white';
+        testButton.style.border = 'none';
+        testButton.style.padding = '10px';
+        testButton.style.borderRadius = '5px';
+        testButton.style.cursor = 'pointer';
+        testButton.onclick = testAPIConnection;
+        document.body.appendChild(testButton);
+    }
+});
+
+// --- GLOBAL ERROR HANDLER ---
+window.addEventListener('error', function(e) {
+    logError('Global JavaScript error:', e.error);
+    showNotification('An error occurred. Please refresh the page.', 'error');
+});
+
+window.addEventListener('unhandledrejection', function(e) {
+    logError('Unhandled promise rejection:', e.reason);
+    showNotification('A network error occurred. Please check your connection.', 'error');
+});
 
 // Start the app
 document.addEventListener('DOMContentLoaded', init);
