@@ -359,7 +359,7 @@ async function handleEditProfileClick() {
             mobileNumber: document.getElementById('editProfileMobileNumber').value
         };
         try {
-            const response = await fetch('http://localhost:3000/api/profile/update', {
+            const response = await fetch('https://sportshub-backend-fkye.onrender.com/api/profile/update', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedData)
@@ -395,7 +395,7 @@ async function handleApplication(e) {
         userExperience: parseInt(document.getElementById('applicantExperience').value)
     };
     try {
-        const response = await fetch(`http://localhost:3000/api/events/${event.id}/join`, {
+        const response = await fetch(`https://sportshub-backend-fkye.onrender.com/api/events/${event.id}/join`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(applicationData)
@@ -417,7 +417,7 @@ async function handleApplication(e) {
 async function handleLeaveTeam(teamName) {
     if (!currentUser || !confirm(`Are you sure you want to leave ${teamName}?`)) return;
     try {
-        const response = await fetch(`http://localhost:3000/api/teams/leave`, {
+        const response = await fetch(`https://sportshub-backend-fkye.onrender.com/api/teams/leave`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userFullName: currentUser.fullName, teamName })
