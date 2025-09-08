@@ -119,14 +119,18 @@ function updateNotificationBadge() {
 
 async function markNotificationsAsRead() {
     if (!currentUser || unreadNotificationCount === 0) return;
-    
+
     try {
         const result = await apiRequest('/api/notifications/mark-read', {
             method: 'POST',
             body: JSON.stringify({ userEmail: currentUser.email })
         });
-        
+
         if (result.success) {
+            // This is the important fix: it updates the local data
+            currentUser.notifications.forEach(n => n.read = true);
+            saveData(); 
+
             unreadNotificationCount = 0;
             updateNotificationBadge();
             logDebug('Notifications marked as read');
@@ -880,8 +884,10 @@ function updateUIForUser() {
     if (elements.teamsJoinedCount) elements.teamsJoinedCount.textContent = currentUser.joinedTeams.length;
     if (elements.myTeamsCount) elements.myTeamsCount.textContent = currentUser.joinedTeams.length;
     
-    unreadNotificationCount = currentUser.notifications ? currentUser.notifications.length : 0;
+    
+    unreadNotificationCount = currentUser.notifications ? currentUser.notifications.filter(n => !n.read).length : 0;
     updateNotificationBadge();
+
     updateUserAvatar();
 }
 
