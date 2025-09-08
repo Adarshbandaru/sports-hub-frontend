@@ -4,6 +4,8 @@ let currentEventIndex = null;
 let upcomingEvents = []; 
 let websocket = null;
 let currentChatTeam = null;
+let notificationWebSocket = null;
+let unreadNotificationCount = 0;
 
 const ongoingEvents = [ 
     { id: 5, name: "National Volleyball Championship", date: "2025-09-07", emoji: "🏐" }, 
@@ -47,7 +49,107 @@ function loadData() {
     }
 }
 
-// --- WEBSOCKET FUNCTIONS ---
+// --- NOTIFICATION WEBSOCKET FUNCTIONS ---
+function initializeNotificationWebSocket() {
+    if (notificationWebSocket && notificationWebSocket.readyState === WebSocket.OPEN) {
+        return;
+    }
+    
+    const wsUrl = API_BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://') + '/notifications';
+    notificationWebSocket = new WebSocket(wsUrl);
+    
+    notificationWebSocket.onopen = function() {
+        logDebug('Connected to notification WebSocket server');
+        if (currentUser) {
+            notificationWebSocket.send(JSON.stringify({
+                type: 'register',
+                userEmail: currentUser.email
+            }));
+        }
+    };
+    
+    notificationWebSocket.onmessage = function(event) {
+        try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'notification') {
+                handleNewNotification(data.notification);
+            }
+        } catch (error) {
+            logError('Error parsing notification WebSocket message', error);
+        }
+    };
+    
+    notificationWebSocket.onclose = function() {
+        logDebug('Notification WebSocket connection closed');
+        setTimeout(initializeNotificationWebSocket, 3000);
+    };
+    
+    notificationWebSocket.onerror = function(error) {
+        logError('Notification WebSocket error', error);
+    };
+}
+
+function handleNewNotification(notification) {
+    if (!currentUser) return;
+    
+    currentUser.notifications.unshift(notification);
+    
+    if (currentUser.notifications.length > 10) {
+        currentUser.notifications = currentUser.notifications.slice(0, 10);
+    }
+    
+    unreadNotificationCount++;
+    updateNotificationBadge();
+    saveData();
+    showNotification(`${notification.title}: ${notification.body}`, 'success');
+    logDebug('New notification received:', notification);
+}
+
+function updateNotificationBadge() {
+    const notificationBadge = document.getElementById('notificationBadge');
+    if (notificationBadge) {
+        if (unreadNotificationCount > 0) {
+            notificationBadge.textContent = unreadNotificationCount;
+            notificationBadge.style.display = 'flex';
+        } else {
+            notificationBadge.style.display = 'none';
+        }
+    }
+}
+
+async function markNotificationsAsRead() {
+    if (!currentUser || unreadNotificationCount === 0) return;
+    
+    try {
+        const result = await apiRequest('/api/notifications/mark-read', {
+            method: 'POST',
+            body: JSON.stringify({ userEmail: currentUser.email })
+        });
+        
+        if (result.success) {
+            unreadNotificationCount = 0;
+            updateNotificationBadge();
+            logDebug('Notifications marked as read');
+        }
+    } catch (error) {
+        logError('Failed to mark notifications as read', error);
+    }
+}
+
+function formatNotificationTime(timestamp) {
+    if (!timestamp) return '';
+    
+    const now = new Date();
+    const notificationTime = new Date(timestamp);
+    const diffInMinutes = Math.floor((now - notificationTime) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+    return `${Math.floor(diffInMinutes / 1440)}d ago`;
+}
+
+// --- CHAT WEBSOCKET FUNCTIONS ---
 function initializeWebSocket() {
     if (websocket && websocket.readyState === WebSocket.OPEN) {
         return; // Already connected
@@ -150,8 +252,6 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
-// In scripts.js, replace the entire openTeamChat function
-
 async function openTeamChat(teamName) {
     const chatModal = document.getElementById('chatModal');
     const chatModalTitle = document.getElementById('chatModalTitle');
@@ -161,7 +261,7 @@ async function openTeamChat(teamName) {
     chatMessages.innerHTML = ''; // Clear previous messages
     chatModal.classList.add('active');
     
-    // --- NEW: Load chat history ---
+    // Load chat history
     try {
         const historyResult = await apiRequest(`/api/chat/${teamName}`);
         if (historyResult.success) {
@@ -177,14 +277,12 @@ async function openTeamChat(teamName) {
     joinTeamChat(teamName);
 }
 
-// In scripts.js, replace the entire closeChatModal function
-
 function closeChatModal() {
     const chatModal = document.getElementById('chatModal');
     chatModal.classList.remove('active');
     currentChatTeam = null;
     
-    // --- NEW: Close the WebSocket connection ---
+    // Close the WebSocket connection
     if (websocket) {
         logDebug('Closing WebSocket connection.');
         websocket.close();
@@ -276,6 +374,7 @@ async function showApp() {
     renderEvents(ongoingEvents, 'ongoingEventsGrid');
     renderEvents(pastEvents, 'pastEventsGrid');
     updateUIForUser();
+    initializeNotificationWebSocket();
 }
 
 // --- FETCH DATA FROM BACKEND ---
@@ -336,7 +435,6 @@ async function fetchAndRenderUpcomingEventsWithRetry() {
     showNotification('Failed to load events after multiple attempts. Please check your connection.', 'error');
 }
 
-// Backward compatibility
 async function fetchAndRenderUpcomingEvents() {
     return await fetchAndRenderUpcomingEventsWithRetry();
 }
@@ -370,7 +468,10 @@ function setupEventListeners() {
         notifIcon.addEventListener('click', (e) => { 
             e.stopPropagation(); 
             const isVisible = notifPanel.classList.toggle('show'); 
-            if (isVisible) renderNotifications(); 
+            if (isVisible) {
+                renderNotifications();
+                markNotificationsAsRead();
+            }
         });
     }
     
@@ -479,10 +580,17 @@ function handleLogout() {
     logDebug('Handling logout');
     currentUser = null;
     localStorage.removeItem('sportsHubUser');
+    
     if (websocket) {
         websocket.close();
         websocket = null;
     }
+    
+    if (notificationWebSocket) {
+        notificationWebSocket.close();
+        notificationWebSocket = null;
+    }
+    
     window.location.reload();
 }
 
@@ -723,26 +831,26 @@ function validateRegisterField(f, v) {
 }
 
 // --- UI UPDATE & RENDERING ---
-function updateUIForUser() { 
-    if (!currentUser) return; 
+function updateUIForUser() {
+    if (!currentUser) return;
     
     const elements = {
         userName: document.getElementById('userName'),
         welcomeUserName: document.getElementById('welcomeUserName'),
         userRegNumber: document.getElementById('userRegNumber'),
         teamsJoinedCount: document.getElementById('teamsJoinedCount'),
-        myTeamsCount: document.getElementById('myTeamsCount'),
-        notificationBadge: document.getElementById('notificationBadge')
+        myTeamsCount: document.getElementById('myTeamsCount')
     };
     
-    if (elements.userName) elements.userName.textContent = currentUser.fullName; 
-    if (elements.welcomeUserName) elements.welcomeUserName.textContent = currentUser.fullName; 
-    if (elements.userRegNumber) elements.userRegNumber.textContent = currentUser.studentID; 
-    if (elements.teamsJoinedCount) elements.teamsJoinedCount.textContent = currentUser.joinedTeams.length; 
-    if (elements.myTeamsCount) elements.myTeamsCount.textContent = currentUser.joinedTeams.length; 
-    if (elements.notificationBadge) elements.notificationBadge.textContent = currentUser.notifications.length; 
+    if (elements.userName) elements.userName.textContent = currentUser.fullName;
+    if (elements.welcomeUserName) elements.welcomeUserName.textContent = currentUser.fullName;
+    if (elements.userRegNumber) elements.userRegNumber.textContent = currentUser.studentID;
+    if (elements.teamsJoinedCount) elements.teamsJoinedCount.textContent = currentUser.joinedTeams.length;
+    if (elements.myTeamsCount) elements.myTeamsCount.textContent = currentUser.joinedTeams.length;
     
-    updateUserAvatar(); 
+    unreadNotificationCount = currentUser.notifications ? currentUser.notifications.length : 0;
+    updateNotificationBadge();
+    updateUserAvatar();
 }
 
 function updateUserAvatar() { 
@@ -950,28 +1058,38 @@ function renderProfile() {
     updateUserAvatar(); 
 }
 
-function renderNotifications() { 
-    const l = document.getElementById('notificationList'); 
-    if (!l) return;
+function renderNotifications() {
+    const notificationList = document.getElementById('notificationList');
+    if (!notificationList) return;
     
-    l.innerHTML = ''; 
-    if (!currentUser || currentUser.notifications.length === 0) { 
-        l.innerHTML = `<li class="notification-item-empty">No new notifications</li>`; 
-        return; 
-    } 
+    notificationList.innerHTML = '';
     
-    currentUser.notifications.forEach(n => { 
-        const i = document.createElement('li'); 
-        i.className = 'notification-item'; 
-        i.innerHTML = `
-            <div class="notification-item-icon">${n.icon}</div>
+    if (!currentUser || currentUser.notifications.length === 0) {
+        notificationList.innerHTML = `<li class="notification-item-empty">No new notifications</li>`;
+        return;
+    }
+    
+    currentUser.notifications.forEach((notification, index) => {
+        const notificationItem = document.createElement('li');
+        notificationItem.className = 'notification-item';
+        
+        const isUnread = index < unreadNotificationCount;
+        if (isUnread) {
+            notificationItem.classList.add('unread');
+        }
+        
+        notificationItem.innerHTML = `
+            <div class="notification-item-icon">${notification.icon}</div>
             <div class="notification-item-content">
-                <h4>${n.title}</h4>
-                <p>${n.body}</p>
+                <h4>${notification.title}</h4>
+                <p>${notification.body}</p>
+                <small class="notification-time">${formatNotificationTime(notification.timestamp)}</small>
             </div>
-        `; 
-        l.appendChild(i); 
-    }); 
+            ${isUnread ? '<div class="unread-indicator"></div>' : ''}
+        `;
+        
+        notificationList.appendChild(notificationItem);
+    });
 }
 
 function filterEvents(e) { 
