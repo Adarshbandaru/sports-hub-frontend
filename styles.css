@@ -597,10 +597,36 @@ body {
 .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3); }
 
 /* Notification Toast */
-.notification { position: fixed; top: 20px; right: 20px; padding: 15px 20px; border-radius: 10px; color: white; font-weight: 500; z-index: 1001; transform: translateX(120%); opacity: 0; transition: all 0.4s ease; }
-.notification.show { transform: translateX(0); opacity: 1; }
+.notification { 
+    position: fixed; 
+    top: 20px; 
+    right: 20px; 
+    padding: 15px 20px; 
+    border-radius: 10px; 
+    color: white; 
+    font-weight: 500; 
+    z-index: 1001; 
+    transform: translateX(120%); 
+    opacity: 0; 
+    transition: all 0.4s ease; 
+}
+.notification.show { 
+    transform: translateX(0); 
+    opacity: 1; 
+    animation: slideInRight 0.4s ease, fadeOut 0.4s ease 2.6s;
+}
 .notification.success { background: #48bb78; }
 .notification.error { background: #e53e3e; }
+
+@keyframes slideInRight {
+    from { transform: translateX(120%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
 
 /* Modal Input Fix */
 .modal .form-input { background: #f7fafc; border: 1px solid #e2e8f0; color: #1a202c; }
@@ -670,27 +696,210 @@ body {
 .logout-btn { padding: 12px 30px; background: #e53e3e; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.3s ease; }
 .logout-btn:hover { background: #c53030; }
 
-/* Notification Panel Styles */
-.notification-icon { position: relative; cursor: pointer; padding: 8px; }
-.notification-badge { position: absolute; top: 2px; right: 2px; background: #e53e3e; color: white; font-size: 10px; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-.notification-panel { display: none; position: absolute; top: 100%; right: 0; margin-top: 10px; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); width: 350px; z-index: 101; border: 1px solid #f1f5f9; }
-.notification-panel.show { display: block; }
-.notification-panel-header { padding: 15px; border-bottom: 1px solid #f1f5f9; }
-.notification-panel-header h3 { font-size: 16px; font-weight: 600; color: #1a202c; }
-.notification-list { list-style: none; max-height: 400px; overflow-y: auto; }
-.notification-item { display: flex; gap: 15px; padding: 15px; border-bottom: 1px solid #f1f5f9; }
+/* Enhanced Notification Panel Styles */
+.notification-icon { 
+    position: relative; 
+    cursor: pointer; 
+    padding: 8px; 
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.notification-icon:hover {
+    background: rgba(102, 126, 234, 0.1);
+    transform: scale(1.05);
+}
+
+.notification-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: #e53e3e;
+    color: white;
+    font-size: 10px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: none; /* Hidden by default, shown via JavaScript */
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    min-width: 18px;
+    box-shadow: 0 2px 4px rgba(229, 62, 62, 0.3);
+    animation: pulse-badge 2s infinite;
+}
+
+@keyframes pulse-badge {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.notification-panel { 
+    display: none; 
+    position: absolute; 
+    top: 100%; 
+    right: 0; 
+    margin-top: 10px; 
+    background: white; 
+    border-radius: 12px; 
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); 
+    width: 350px; 
+    z-index: 101; 
+    border: 1px solid #f1f5f9;
+    transform: translateY(-10px);
+    opacity: 0;
+    transition: all 0.2s ease;
+    pointer-events: none;
+}
+
+.notification-panel.show { 
+    display: block; 
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.notification-panel-header { 
+    padding: 15px; 
+    border-bottom: 1px solid #f1f5f9; 
+    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    border-radius: 12px 12px 0 0;
+}
+
+.notification-panel-header h3 { 
+    font-size: 16px; 
+    font-weight: 600; 
+    color: #1a202c; 
+    margin: 0;
+}
+
+.notification-list { 
+    list-style: none; 
+    max-height: 350px; 
+    overflow-y: auto; 
+    padding: 0;
+    margin: 0;
+}
+
+.notification-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.notification-list::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.notification-list::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 2px;
+}
+
+.notification-list::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+.notification-item { 
+    display: flex; 
+    gap: 15px; 
+    padding: 15px; 
+    border-bottom: 1px solid #f1f5f9; 
+    transition: all 0.2s ease;
+    position: relative;
+    border-radius: 8px;
+    margin: 0 5px 5px 5px;
+}
+
 .notification-item:last-child { border-bottom: none; }
-.notification-item-empty { padding: 20px; text-align: center; color: #718096; }
-.notification-item-icon { font-size: 20px; }
-.notification-item-content h4 { font-size: 14px; font-weight: 600; color: #2d3748; margin-bottom: 4px; }
-.notification-item-content p { font-size: 13px; color: #718096; }
 
-.no-data-placeholder { grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: #fff; border-radius: 15px; }
-.no-data-placeholder h3 { color: #4a5568; margin-bottom: 10px; }
-.no-data-placeholder p { color: #718096; }
+.notification-item:hover {
+    background: #f8fafc;
+    transform: translateX(3px);
+}
 
-/* ---- TEAM CHAT STYLES ---- */
+.notification-item.unread {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e6fffa 100%);
+    border-left: 3px solid #667eea;
+    position: relative;
+}
 
+.notification-item.unread:hover {
+    background: linear-gradient(135deg, #e6f7ff 0%, #d4f7ed 100%);
+}
+
+.notification-item.unread::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    width: 8px;
+    height: 8px;
+    background: #667eea;
+    border-radius: 50%;
+    transform: translateY(-50%);
+    animation: glow-dot 2s infinite;
+}
+
+@keyframes glow-dot {
+    0%, 100% { opacity: 1; box-shadow: 0 0 5px rgba(102, 126, 234, 0.5); }
+    50% { opacity: 0.7; box-shadow: 0 0 10px rgba(102, 126, 234, 0.8); }
+}
+
+.notification-item-empty { 
+    padding: 30px 20px; 
+    text-align: center; 
+    color: #718096; 
+    font-style: italic;
+    background: #f8fafc;
+    border-radius: 8px;
+    margin: 10px;
+}
+
+.notification-item-icon { 
+    font-size: 20px; 
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.notification-item-content h4 { 
+    font-size: 14px; 
+    font-weight: 600; 
+    color: #2d3748; 
+    margin-bottom: 4px; 
+    line-height: 1.3;
+}
+
+.notification-item-content p { 
+    font-size: 13px; 
+    color: #4a5568; 
+    line-height: 1.4;
+    margin-bottom: 0;
+}
+
+.notification-time {
+    color: #a0aec0;
+    font-size: 11px;
+    margin-top: 4px;
+    display: block;
+    font-weight: 400;
+}
+
+.no-data-placeholder { 
+    grid-column: 1 / -1; 
+    text-align: center; 
+    padding: 60px 20px; 
+    background: #fff; 
+    border-radius: 15px; 
+}
+
+.no-data-placeholder h3 { 
+    color: #4a5568; 
+    margin-bottom: 10px; 
+}
+
+.no-data-placeholder p { 
+    color: #718096; 
+}
+
+/* Team Chat Styles */
 .chat-window {
     display: flex;
     flex-direction: column;
@@ -826,6 +1035,7 @@ body {
     color: #c53030;
 }
 
+/* Responsive Design */
 @media (max-width: 768px) {
     .auth-card { padding: 30px 20px; }
     .main-content { padding: 20px 15px; }
@@ -834,7 +1044,27 @@ body {
     .stats-grid, .actions-grid, .events-grid, .teams-grid, .application-form, .profile-details { grid-template-columns: 1fr; }
     .search-filter { flex-direction: column; }
     .modal-content { padding: 20px; }
-    .notification-panel { width: 300px; }
+    .notification-panel { 
+        width: 280px; 
+        right: -10px;
+        max-height: 400px;
+    }
+    .notification-item {
+        padding: 12px;
+        margin: 0 3px 3px 3px;
+    }
+    .notification-item-content h4 {
+        font-size: 13px;
+    }
+    .notification-item-content p {
+        font-size: 12px;
+    }
+    .notification-badge {
+        width: 16px;
+        height: 16px;
+        font-size: 9px;
+        min-width: 16px;
+    }
     .team-card-footer { flex-direction: column; }
     .chat-window { height: 50vh; }
 }
