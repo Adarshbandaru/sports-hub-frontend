@@ -17,6 +17,29 @@ const pastEvents = [
     { id: 8, name: "Girls Hockey League", date: "2025-08-15", emoji: "🏑" } 
 ];
 
+// --- ROUTING CONFIGURATION ---
+const ROUTES = {
+    '/': 'dashboardSection',
+    '/dashboard': 'dashboardSection',
+    '/events': 'upcomingSection',
+    '/events/upcoming': 'upcomingSection',
+    '/events/ongoing': 'ongoingSection',
+    '/events/past': 'pastSection',
+    '/teams': 'myTeamsSection',
+    '/profile': 'profileSection'
+};
+
+const ROUTE_TITLES = {
+    '/': 'SportsHub - Dashboard',
+    '/dashboard': 'SportsHub - Dashboard',
+    '/events': 'SportsHub - Upcoming Events',
+    '/events/upcoming': 'SportsHub - Upcoming Events',
+    '/events/ongoing': 'SportsHub - Live Events',
+    '/events/past': 'SportsHub - Past Events',
+    '/teams': 'SportsHub - My Teams',
+    '/profile': 'SportsHub - Profile'
+};
+
 // --- CONFIGURATION ---
 const API_BASE_URL = 'https://sportshub-backend-fkye.onrender.com';
 
@@ -27,6 +50,93 @@ function logDebug(message, data = null) {
 
 function logError(message, error = null) {
     console.error(`[ERROR] ${message}`, error);
+}
+
+// --- ROUTING FUNCTIONS ---
+function initializeRouter() {
+    // Handle initial page load
+    handleRoute();
+    
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', handleRoute);
+    
+    // Handle navigation clicks
+    document.addEventListener('click', (e) => {
+        // Check if the clicked element or its parent has a route
+        const routeElement = e.target.closest('[data-route]');
+        if (routeElement) {
+            e.preventDefault();
+            const route = routeElement.getAttribute('data-route');
+            navigateTo(route);
+        }
+    });
+}
+
+function navigateTo(path) {
+    // Update browser URL without page reload
+    history.pushState(null, '', path);
+    handleRoute();
+}
+
+function handleRoute() {
+    const path = window.location.pathname;
+    const sectionId = ROUTES[path] || ROUTES['/dashboard'];
+    
+    // Update page title
+    document.title = ROUTE_TITLES[path] || 'SportsHub';
+    
+    // Show the appropriate section
+    showSectionByRoute(sectionId);
+    
+    logDebug(`Navigated to: ${path} -> ${sectionId}`);
+}
+
+function showSectionByRoute(sectionId) {
+    // Hide all sections
+    document.querySelectorAll('.section').forEach(section => {
+        section.classList.remove('active');
+    });
+    
+    // Show target section
+    const targetSection = document.getElementById(sectionId);
+    if (targetSection) {
+        targetSection.classList.add('active');
+        
+        // Load section-specific data
+        loadSectionData(sectionId);
+    }
+}
+
+function loadSectionData(sectionId) {
+    switch(sectionId) {
+        case 'upcomingSection':
+            renderEvents(filterEvents(upcomingEvents), 'upcomingEventsGrid', true);
+            break;
+        case 'ongoingSection':
+            renderEvents(ongoingEvents, 'ongoingEventsGrid');
+            break;
+        case 'pastSection':
+            renderEvents(pastEvents, 'pastEventsGrid');
+            break;
+        case 'myTeamsSection':
+            renderMyTeams();
+            break;
+        case 'profileSection':
+            renderProfile();
+            break;
+        case 'dashboardSection':
+            updateDashboardStats();
+            break;
+    }
+}
+
+function updateDashboardStats() {
+    // Update dashboard counts when returning to dashboard
+    const actionCards = document.querySelectorAll('.action-card .count');
+    const statCard = document.querySelector('.stat-card:nth-child(3) p');
+    
+    if (actionCards.length >= 1) actionCards[0].textContent = upcomingEvents.length;
+    if (statCard) statCard.textContent = upcomingEvents.length;
 }
 
 // --- DATA PERSISTENCE ---
@@ -127,7 +237,6 @@ async function markNotificationsAsRead() {
         });
 
         if (result.success) {
-            // This is the important fix: it updates the local data
             currentUser.notifications.forEach(n => n.read = true);
             saveData(); 
 
@@ -156,7 +265,7 @@ function formatNotificationTime(timestamp) {
 // --- CHAT WEBSOCKET FUNCTIONS ---
 function initializeWebSocket() {
     if (websocket && websocket.readyState === WebSocket.OPEN) {
-        return; // Already connected
+        return;
     }
     
     const wsUrl = API_BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://');
@@ -181,7 +290,6 @@ function initializeWebSocket() {
     websocket.onclose = function() {
         logDebug('WebSocket connection closed');
         updateChatStatus('disconnected');
-        // Attempt to reconnect after 3 seconds
         setTimeout(initializeWebSocket, 3000);
     };
     
@@ -194,7 +302,6 @@ function initializeWebSocket() {
 function joinTeamChat(teamName) {
     if (!websocket || websocket.readyState !== WebSocket.OPEN) {
         initializeWebSocket();
-        // Wait for connection and then join
         setTimeout(() => joinTeamChat(teamName), 1000);
         return;
     }
@@ -262,10 +369,9 @@ async function openTeamChat(teamName) {
     const chatMessages = document.getElementById('chatMessages');
     
     chatModalTitle.textContent = `${teamName} Chat`;
-    chatMessages.innerHTML = ''; // Clear previous messages
+    chatMessages.innerHTML = '';
     chatModal.classList.add('active');
     
-    // Load chat history
     try {
         const historyResult = await apiRequest(`/api/chat/${teamName}`);
         if (historyResult.success) {
@@ -277,7 +383,6 @@ async function openTeamChat(teamName) {
         logError('Failed to fetch chat history', error);
     }
     
-    // Join the team chat room via WebSocket
     joinTeamChat(teamName);
 }
 
@@ -286,7 +391,6 @@ function closeChatModal() {
     chatModal.classList.remove('active');
     currentChatTeam = null;
     
-    // Close the WebSocket connection
     if (websocket) {
         logDebug('Closing WebSocket connection.');
         websocket.close();
@@ -360,6 +464,8 @@ function init() {
     if (currentUser) { 
         showApp();
         initializeWebSocket();
+        // Initialize routing after showing app
+        initializeRouter();
     } else { 
         showAuth();
     }
@@ -399,7 +505,6 @@ async function fetchAndRenderUpcomingEventsWithRetry() {
             const events = result.data;
             logDebug('Successfully fetched events:', events.length);
             
-            // Validate event structure
             const validEvents = events.filter(event => {
                 const isValid = event.id != null && event.team != null;
                 if (!isValid) {
@@ -415,26 +520,23 @@ async function fetchAndRenderUpcomingEventsWithRetry() {
             upcomingEvents = validEvents;
             renderEvents(filterEvents(upcomingEvents), 'upcomingEventsGrid', true);
             
-            // Update dashboard counts
             const actionCard = document.querySelector('.action-card:nth-child(1) .count');
             const statCard = document.querySelector('.stat-card:nth-child(3) p');
             if (actionCard) actionCard.textContent = upcomingEvents.length;
             if (statCard) statCard.textContent = upcomingEvents.length;
             
-            return; // Success, exit retry loop
+            return;
             
         } catch (error) {
             logError(`Fetch attempt ${i + 1} failed:`, error);
             lastError = error;
             
             if (i < maxRetries - 1) {
-                // Wait before retry (exponential backoff)
                 await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
             }
         }
     }
     
-    // All retries failed
     logError('All fetch attempts failed:', lastError);
     showNotification('Failed to load events after multiple attempts. Please check your connection.', 'error');
 }
@@ -463,7 +565,6 @@ function setupEventListeners() {
     document.getElementById('changePhotoButton').addEventListener('click', handleChangePhoto);
     document.getElementById('logoutButton').addEventListener('click', handleLogout);
     document.getElementById('editProfileButton').addEventListener('click', handleEditProfileClick);
-    // In setupEventListeners() in scripts.js
     document.getElementById('avatarUploadInput').addEventListener('change', handleFileUpload);
     
     // Notification panel
@@ -492,7 +593,6 @@ function setupEventListeners() {
 }
 
 function setupChatEventListeners() {
-    // Chat form submission
     const chatForm = document.getElementById('chatForm');
     if (chatForm) {
         chatForm.addEventListener('submit', function(e) {
@@ -507,7 +607,6 @@ function setupChatEventListeners() {
         });
     }
     
-    // Close chat modal button
     const closeChatBtn = document.getElementById('closeChatModalBtn');
     if (closeChatBtn) {
         closeChatBtn.addEventListener('click', closeChatModal);
@@ -547,6 +646,8 @@ async function handleLogin(e) {
         saveData();
         showApp();
         initializeWebSocket();
+        // Initialize routing after successful login
+        initializeRouter();
         showNotification(result.data.message, 'success');
     } else {
         showNotification(result.error, 'error');
@@ -600,10 +701,8 @@ function handleLogout() {
     window.location.reload();
 }
 
-// Replace the old handleChangePhoto function
 function handleChangePhoto() {
     if (!currentUser) return;
-    // This now clicks the hidden file input
     document.getElementById('avatarUploadInput').click();
 }
 
@@ -643,22 +742,19 @@ async function handleEditProfileClick() {
         profileCard.classList.add('is-editing');
     }
 }
-// Add this new function to scripts.js
+
 async function handleFileUpload(event) {
     const file = event.target.files[0];
-    if (!file) return; // Exit if no file was selected
+    if (!file) return;
 
-    // FormData is a special object for sending files
     const formData = new FormData();
-    formData.append('avatar', file); // 'avatar' must match the name in upload.single('avatar') on the backend
+    formData.append('avatar', file);
     formData.append('userEmail', currentUser.email);
 
     try {
-        // We use a direct fetch call here because we are sending a file, not JSON
         const response = await fetch(`${API_BASE_URL}/api/profile/avatar-upload`, {
             method: 'POST',
             body: formData 
-            // NOTE: Do not set 'Content-Type' header, the browser does it automatically for FormData
         });
 
         const result = await response.json();
@@ -666,7 +762,6 @@ async function handleFileUpload(event) {
             throw new Error(result.message);
         }
 
-        // Update the user object, save to localStorage, and update the UI
         currentUser.avatarUrl = result.avatarUrl;
         saveData();
         updateUserAvatar();
@@ -685,7 +780,6 @@ async function handleApplication(e) {
     
     const event = upcomingEvents[currentEventIndex];
     
-    // Comprehensive debugging
     logDebug('Current event index:', currentEventIndex);
     logDebug('Total upcoming events:', upcomingEvents.length);
     logDebug('Event object:', event);
@@ -884,7 +978,6 @@ function updateUIForUser() {
     if (elements.teamsJoinedCount) elements.teamsJoinedCount.textContent = currentUser.joinedTeams.length;
     if (elements.myTeamsCount) elements.myTeamsCount.textContent = currentUser.joinedTeams.length;
     
-    
     unreadNotificationCount = currentUser.notifications ? currentUser.notifications.filter(n => !n.read).length : 0;
     updateNotificationBadge();
 
@@ -939,7 +1032,6 @@ function openJoinModal(i) {
     currentEventIndex = i; 
     const event = upcomingEvents[i]; 
     
-    // Enhanced debugging
     logDebug('Opening modal for event index:', i);
     logDebug('Event data:', event);
     logDebug('Event ID:', event?.id);
@@ -1017,35 +1109,20 @@ function closeJoinModal() {
     currentEventIndex = null; 
 }
 
-function showSection(s) { 
-    document.querySelectorAll('.section').forEach(e => e.classList.remove('active')); 
-    const targetSection = document.getElementById(s);
-    if (targetSection) targetSection.classList.add('active');
+// Updated showSection function - now deprecated in favor of navigateTo
+function showSection(s) {
+    // Map old section IDs to new routes
+    const sectionToRoute = {
+        'dashboardSection': '/dashboard',
+        'upcomingSection': '/events/upcoming',
+        'ongoingSection': '/events/ongoing', 
+        'pastSection': '/events/past',
+        'myTeamsSection': '/teams',
+        'profileSection': '/profile'
+    };
     
-    // Update active nav link if called from navigation
-    if (event && event.target) {
-        document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-        event.target.classList.add('active');
-    }
-    
-    // Load section-specific data
-    switch(s) { 
-        case 'upcomingSection': 
-            renderEvents(filterEvents(upcomingEvents), 'upcomingEventsGrid', true); 
-            break; 
-        case 'ongoingSection': 
-            renderEvents(ongoingEvents, 'ongoingEventsGrid'); 
-            break; 
-        case 'pastSection': 
-            renderEvents(pastEvents, 'pastEventsGrid'); 
-            break; 
-        case 'myTeamsSection': 
-            renderMyTeams(); 
-            break; 
-        case 'profileSection': 
-            renderProfile(); 
-            break; 
-    } 
+    const route = sectionToRoute[s] || '/dashboard';
+    navigateTo(route);
 }
 
 function renderMyTeams() { 
@@ -1182,7 +1259,6 @@ async function testAPIConnection() {
 
 // --- DEBUGGING HELPER ---
 window.addEventListener('load', function() {
-    // Add a temporary test button for debugging in development
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         const testButton = document.createElement('button');
         testButton.textContent = 'Test API';
