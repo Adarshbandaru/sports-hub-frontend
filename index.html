@@ -64,12 +64,28 @@
     </div>
 
     <div class="main-container" id="mainContainer" style="display: none;">
+        <!-- Navigation Header -->
         <header class="header">
             <div class="header-content">
-                <div class="header-logo" onclick="showSection('dashboardSection')" style="cursor: pointer;">
+                <div class="header-logo" data-route="/dashboard" style="cursor: pointer;">
                     <div class="logo">🏆</div>
                     <h1>SportsHub</h1>
                 </div>
+                
+                <!-- Main Navigation -->
+                <nav class="main-nav">
+                    <a href="/dashboard" class="nav-link" data-route="/dashboard">Dashboard</a>
+                    <div class="nav-dropdown">
+                        <a href="/events" class="nav-link" data-route="/events">Events</a>
+                        <div class="nav-dropdown-menu">
+                            <a href="/events/upcoming" class="nav-dropdown-item" data-route="/events/upcoming">Upcoming</a>
+                            <a href="/events/ongoing" class="nav-dropdown-item" data-route="/events/ongoing">Live Events</a>
+                            <a href="/events/past" class="nav-dropdown-item" data-route="/events/past">Past Events</a>
+                        </div>
+                    </div>
+                    <a href="/teams" class="nav-link" data-route="/teams">My Teams</a>
+                </nav>
+
                 <div class="header-user">
                     <div class="notification-icon" id="notificationIcon">
                         🔔
@@ -79,7 +95,7 @@
                             <ul class="notification-list" id="notificationList"></ul>
                         </div>
                     </div>
-                    <div class="user-info" onclick="showSection('profileSection')" style="cursor: pointer;">
+                    <div class="user-info" data-route="/profile" style="cursor: pointer;">
                         <div class="user-avatar" id="userAvatar"></div>
                         <span id="userName"></span>
                     </div>
@@ -87,7 +103,9 @@
             </div>
         </header>
 
+        <!-- Main Content Sections -->
         <div class="main-content">
+            <!-- Dashboard Section -->
             <div class="section active" id="dashboardSection">
                 <div class="welcome-section">
                     <h2>Welcome back, <span id="welcomeUserName"></span>!</h2>
@@ -99,33 +117,104 @@
                     </div>
                 </div>
                 <div class="actions-grid">
-                    <div class="action-card" onclick="showSection('upcomingSection')"><div class="action-icon blue">📅</div><h3>Upcoming Events</h3><div class="count"></div></div>
-                    <div class="action-card" onclick="showSection('ongoingSection')"><div class="action-icon green">🏆</div><h3>Live Events</h3><div class="count">2</div></div>
-                    <div class="action-card" onclick="showSection('pastSection')"><div class="action-icon purple">🏅</div><h3>Past Events</h3><div class="count">3</div></div>
-                    <div class="action-card" onclick="showSection('myTeamsSection')"><div class="action-icon orange">👥</div><h3>My Teams</h3><div class="count" id="myTeamsCount"></div></div>
+                    <div class="action-card" data-route="/events/upcoming">
+                        <div class="action-icon blue">📅</div>
+                        <h3>Upcoming Events</h3>
+                        <div class="count"></div>
+                    </div>
+                    <div class="action-card" data-route="/events/ongoing">
+                        <div class="action-icon green">🏆</div>
+                        <h3>Live Events</h3>
+                        <div class="count">2</div>
+                    </div>
+                    <div class="action-card" data-route="/events/past">
+                        <div class="action-icon purple">🏅</div>
+                        <h3>Past Events</h3>
+                        <div class="count">3</div>
+                    </div>
+                    <div class="action-card" data-route="/teams">
+                        <div class="action-icon orange">👥</div>
+                        <h3>My Teams</h3>
+                        <div class="count" id="myTeamsCount"></div>
+                    </div>
                 </div>
             </div>
+
+            <!-- Upcoming Events Section -->
             <div class="section" id="upcomingSection">
-                <div class="section-header"><div class="section-title"><h2>Upcoming Events</h2><p>Browse and join sports events</p></div><button class="back-btn" onclick="showSection('dashboardSection')">← Back to Dashboard</button></div>
-                <div class="search-filter"><input type="text" class="search-input" id="searchInput" placeholder="Search events..."><select class="filter-select" id="categoryFilter"><option value="all">All Categories</option><option value="cricket">Cricket</option><option value="football">Football</option><option value="badminton">Badminton</option></select></div>
+                <div class="section-header">
+                    <div class="section-title">
+                        <h2>Upcoming Events</h2>
+                        <p>Browse and join sports events</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="back-btn" data-route="/dashboard">← Back to Dashboard</button>
+                    </div>
+                </div>
+                <div class="search-filter">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search events...">
+                    <select class="filter-select" id="categoryFilter">
+                        <option value="all">All Categories</option>
+                        <option value="cricket">Cricket</option>
+                        <option value="football">Football</option>
+                        <option value="badminton">Badminton</option>
+                    </select>
+                </div>
                 <div class="events-grid" id="upcomingEventsGrid"></div>
             </div>
+
+            <!-- Ongoing Events Section -->
             <div class="section" id="ongoingSection">
-                <div class="section-header"><div class="section-title"><h2>Live Events</h2><p>Currently happening events</p></div><button class="back-btn" onclick="showSection('dashboardSection')">← Back to Dashboard</button></div>
+                <div class="section-header">
+                    <div class="section-title">
+                        <h2>Live Events</h2>
+                        <p>Currently happening events</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="back-btn" data-route="/dashboard">← Back to Dashboard</button>
+                    </div>
+                </div>
                 <div class="events-grid" id="ongoingEventsGrid"></div>
             </div>
+
+            <!-- Past Events Section -->
             <div class="section" id="pastSection">
-                <div class="section-header"><div class="section-title"><h2>Past Events</h2><p>Previously completed tournaments</p></div><button class="back-btn" onclick="showSection('dashboardSection')">← Back to Dashboard</button></div>
+                <div class="section-header">
+                    <div class="section-title">
+                        <h2>Past Events</h2>
+                        <p>Previously completed tournaments</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="back-btn" data-route="/dashboard">← Back to Dashboard</button>
+                    </div>
+                </div>
                 <div class="events-grid" id="pastEventsGrid"></div>
             </div>
+
+            <!-- My Teams Section -->
             <div class="section" id="myTeamsSection">
-                <div class="section-header"><div class="section-title"><h2>My Teams</h2><p>All the teams you are a part of</p></div><button class="back-btn" onclick="showSection('dashboardSection')">← Back to Dashboard</button></div>
+                <div class="section-header">
+                    <div class="section-title">
+                        <h2>My Teams</h2>
+                        <p>All the teams you are a part of</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="back-btn" data-route="/dashboard">← Back to Dashboard</button>
+                    </div>
+                </div>
                 <div class="teams-grid" id="myTeamsGrid"></div>
             </div>
+
+            <!-- Profile Section -->
             <div class="section" id="profileSection">
                 <div class="section-header">
-                    <div class="section-title"><h2>My Profile</h2><p>View and manage your personal information</p></div>
-                    <button class="back-btn" onclick="showSection('dashboardSection')">← Back to Dashboard</button>
+                    <div class="section-title">
+                        <h2>My Profile</h2>
+                        <p>View and manage your personal information</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="back-btn" data-route="/dashboard">← Back to Dashboard</button>
+                    </div>
                 </div>
                 <div class="profile-card">
                     <div class="profile-header">
@@ -160,21 +249,65 @@
                 </div>
             </div>
         </div>
+
+        <!-- Mobile Navigation (Bottom) -->
+        <nav class="mobile-nav">
+            <a href="/dashboard" class="mobile-nav-item" data-route="/dashboard">
+                <span class="mobile-nav-icon">🏠</span>
+                <span class="mobile-nav-label">Dashboard</span>
+            </a>
+            <a href="/events" class="mobile-nav-item" data-route="/events/upcoming">
+                <span class="mobile-nav-icon">📅</span>
+                <span class="mobile-nav-label">Events</span>
+            </a>
+            <a href="/teams" class="mobile-nav-item" data-route="/teams">
+                <span class="mobile-nav-icon">👥</span>
+                <span class="mobile-nav-label">Teams</span>
+            </a>
+            <a href="/profile" class="mobile-nav-item" data-route="/profile">
+                <span class="mobile-nav-icon">👤</span>
+                <span class="mobile-nav-label">Profile</span>
+            </a>
+        </nav>
     </div>
 
     <!-- Join Team Modal -->
     <div class="modal" id="joinModal">
         <div class="modal-content">
-            <div class="modal-header"><h2 class="modal-title" id="modalTitle"></h2><button class="close-btn" onclick="closeJoinModal()">×</button></div>
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle"></h2>
+                <button class="close-btn" onclick="closeJoinModal()">×</button>
+            </div>
             <div class="event-info" id="eventInfo"></div>
-            <div class="requirements"><h4>Requirements</h4><ul id="requirementsList"></ul></div>
-            <div class="team-members"><h4>Current Team Members</h4><div class="members-list" id="membersList"></div></div>
+            <div class="requirements">
+                <h4>Requirements</h4>
+                <ul id="requirementsList"></ul>
+            </div>
+            <div class="team-members">
+                <h4>Current Team Members</h4>
+                <div class="members-list" id="membersList"></div>
+            </div>
             <form class="application-form" id="applicationForm">
-                <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-input" id="applicantName" required></div>
-                <div class="form-group"><label class="form-label">Registration Number</label><input type="text" class="form-input" id="applicantRegNumber" required></div>
-                <div class="form-group"><label class="form-label">Years of Experience</label><input type="number" class="form-input" id="applicantExperience" min="0" required></div>
-                <div class="form-group"><label class="form-label">Student Email</label><input type="email" class="form-input" id="applicantEmail" required></div>
-                <div class="form-group form-group-full"><label class="form-label">Why do you want to join this team?</label><textarea class="form-textarea" id="applicantMotivation" rows="4"></textarea></div>
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" class="form-input" id="applicantName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Registration Number</label>
+                    <input type="text" class="form-input" id="applicantRegNumber" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Years of Experience</label>
+                    <input type="number" class="form-input" id="applicantExperience" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Student Email</label>
+                    <input type="email" class="form-input" id="applicantEmail" required>
+                </div>
+                <div class="form-group form-group-full">
+                    <label class="form-label">Why do you want to join this team?</label>
+                    <textarea class="form-textarea" id="applicantMotivation" rows="4"></textarea>
+                </div>
                 <button type="submit" class="submit-btn">Submit Application</button>
             </form>
         </div>
@@ -198,7 +331,9 @@
         </div>
     </div>
 
+    <!-- Notification Toast -->
     <div class="notification" id="notification"></div>
+    
     <script src="scripts.js"></script>
 </body>
 </html>
