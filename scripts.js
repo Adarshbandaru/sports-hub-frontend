@@ -648,6 +648,7 @@ async function handleLogin(e) {
         initializeWebSocket();
         // Initialize routing after successful login
         initializeRouter();
+        navigateTo('/dashboard'); 
         showNotification(result.data.message, 'success');
     } else {
         showNotification(result.error, 'error');
