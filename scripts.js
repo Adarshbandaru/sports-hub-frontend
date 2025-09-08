@@ -459,6 +459,8 @@ function setupEventListeners() {
     document.getElementById('changePhotoButton').addEventListener('click', handleChangePhoto);
     document.getElementById('logoutButton').addEventListener('click', handleLogout);
     document.getElementById('editProfileButton').addEventListener('click', handleEditProfileClick);
+    // In setupEventListeners() in scripts.js
+    document.getElementById('avatarUploadInput').addEventListener('change', handleFileUpload);
     
     // Notification panel
     const notifIcon = document.getElementById('notificationIcon');
@@ -594,15 +596,11 @@ function handleLogout() {
     window.location.reload();
 }
 
+// Replace the old handleChangePhoto function
 function handleChangePhoto() {
     if (!currentUser) return;
-    const url = prompt("Enter new profile image URL:");
-    if (url) {
-        currentUser.avatarUrl = url;
-        saveData();
-        updateUserAvatar();
-        showNotification("Profile photo updated!", "success");
-    }
+    // This now clicks the hidden file input
+    document.getElementById('avatarUploadInput').click();
 }
 
 async function handleEditProfileClick() {
@@ -639,6 +637,40 @@ async function handleEditProfileClick() {
         document.getElementById('editProfileMobileNumber').value = currentUser.mobileNumber || '';
         editButton.textContent = 'Save Changes';
         profileCard.classList.add('is-editing');
+    }
+}
+// Add this new function to scripts.js
+async function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return; // Exit if no file was selected
+
+    // FormData is a special object for sending files
+    const formData = new FormData();
+    formData.append('avatar', file); // 'avatar' must match the name in upload.single('avatar') on the backend
+    formData.append('userEmail', currentUser.email);
+
+    try {
+        // We use a direct fetch call here because we are sending a file, not JSON
+        const response = await fetch(`${API_BASE_URL}/api/profile/avatar-upload`, {
+            method: 'POST',
+            body: formData 
+            // NOTE: Do not set 'Content-Type' header, the browser does it automatically for FormData
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message);
+        }
+
+        // Update the user object, save to localStorage, and update the UI
+        currentUser.avatarUrl = result.avatarUrl;
+        saveData();
+        updateUserAvatar();
+        showNotification('Profile photo updated successfully!', 'success');
+
+    } catch (error) {
+        console.error('File upload failed:', error);
+        showNotification(error.message || 'File upload failed.', 'error');
     }
 }
 
