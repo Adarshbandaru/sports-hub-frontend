@@ -65,43 +65,83 @@
 
     <div class="main-container" id="mainContainer" style="display: none;">
         <!-- Navigation Header -->
-        <header class="header">
-            <div class="header-content">
-                <div class="header-logo" data-route="/dashboard" style="cursor: pointer;">
-                    <div class="logo">🏆</div>
-                    <h1>SportsHub</h1>
-                </div>
-                
-                <!-- Main Navigation -->
-                <nav class="main-nav">
-                    <a href="/dashboard" class="nav-link" data-route="/dashboard">Dashboard</a>
-                    <div class="nav-dropdown">
-                        <a href="/events" class="nav-link" data-route="/events">Events</a>
-                        <div class="nav-dropdown-menu">
-                            <a href="/events/upcoming" class="nav-dropdown-item" data-route="/events/upcoming">Upcoming</a>
-                            <a href="/events/ongoing" class="nav-dropdown-item" data-route="/events/ongoing">Live Events</a>
-                            <a href="/events/past" class="nav-dropdown-item" data-route="/events/past">Past Events</a>
-                        </div>
-                    </div>
-                    <a href="/teams" class="nav-link" data-route="/teams">My Teams</a>
-                </nav>
-
-                <div class="header-user">
-                    <div class="notification-icon" id="notificationIcon">
-                        🔔
-                        <span class="notification-badge" id="notificationBadge"></span>
-                        <div class="notification-panel" id="notificationPanel">
-                            <div class="notification-panel-header"><h3>Notifications</h3></div>
-                            <ul class="notification-list" id="notificationList"></ul>
-                        </div>
-                    </div>
-                    <div class="user-info" data-route="/profile" style="cursor: pointer;">
-                        <div class="user-avatar" id="userAvatar"></div>
-                        <span id="userName"></span>
-                    </div>
-                </div>
+<!-- Replace your existing header section with this updated version -->
+<header class="header">
+    <div class="header-left">
+        <div class="hamburger" id="hamburgerMenu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="header-logo" data-route="/dashboard" style="cursor: pointer;">
+            <div class="logo">🏆</div>
+            <h1>SportsHub</h1>
+        </div>
+    </div>
+    <div class="header-right">
+        <div class="notification-icon" id="notificationIcon">
+            🔔
+            <span class="notification-badge" id="notificationBadge"></span>
+            <div class="notification-panel" id="notificationPanel">
+                <div class="notification-panel-header"><h3>Notifications</h3></div>
+                <ul class="notification-list" id="notificationList"></ul>
             </div>
-        </header>
+        </div>
+        <div class="user-info" data-route="/profile" style="cursor: pointer;">
+            <div class="user-avatar" id="userAvatar"></div>
+            <span class="user-name" id="userName"></span>
+        </div>
+    </div>
+</header>
+
+<!-- Add this new sidebar after the header -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-content">
+        <div class="nav-section">
+            <div class="nav-section-title">Main Menu</div>
+            <a href="#" class="nav-item active" data-route="/dashboard">
+                <span class="nav-icon">🏠</span>
+                Dashboard
+            </a>
+            <div class="nav-toggle" id="eventsToggle">
+                <a href="#" class="nav-item" data-route="/events">
+                    <span class="nav-icon">📅</span>
+                    Events
+                </a>
+            </div>
+            <div class="nav-submenu" id="eventsSubmenu">
+                <a href="#" class="nav-item" data-route="/events/upcoming">
+                    <span class="nav-icon">⏰</span>
+                    Upcoming Events
+                </a>
+                <a href="#" class="nav-item" data-route="/events/ongoing">
+                    <span class="nav-icon">🔴</span>
+                    Live Events
+                </a>
+                <a href="#" class="nav-item" data-route="/events/past">
+                    <span class="nav-icon">📊</span>
+                    Past Events
+                </a>
+            </div>
+            <a href="#" class="nav-item" data-route="/teams">
+                <span class="nav-icon">👥</span>
+                My Teams
+            </a>
+        </div>
+        <div class="nav-section">
+            <div class="nav-section-title">Account</div>
+            <a href="#" class="nav-item" data-route="/profile">
+                <span class="nav-icon">👤</span>
+                Profile
+            </a>
+            <a href="#" class="nav-item" id="sidebarLogout">
+                <span class="nav-icon">🚪</span>
+                Logout
+            </a>
+        </div>
+    </div>
+</nav>
 
         <!-- Main Content Sections -->
         <div class="main-content">
@@ -251,25 +291,26 @@
         </div>
 
         <!-- Mobile Navigation (Bottom) -->
-        <nav class="mobile-nav">
-            <a href="/dashboard" class="mobile-nav-item" data-route="/dashboard">
-                <span class="mobile-nav-icon">🏠</span>
-                <span class="mobile-nav-label">Dashboard</span>
-            </a>
-            <a href="/events" class="mobile-nav-item" data-route="/events/upcoming">
-                <span class="mobile-nav-icon">📅</span>
-                <span class="mobile-nav-label">Events</span>
-            </a>
-            <a href="/teams" class="mobile-nav-item" data-route="/teams">
-                <span class="mobile-nav-icon">👥</span>
-                <span class="mobile-nav-label">Teams</span>
-            </a>
-            <a href="/profile" class="mobile-nav-item" data-route="/profile">
-                <span class="mobile-nav-icon">👤</span>
-                <span class="mobile-nav-label">Profile</span>
-            </a>
-        </nav>
+        <nav class="mobile-nav" id="mobileNav">
+    <div class="mobile-nav-content">
+        <a href="/dashboard" class="mobile-nav-item" data-route="/dashboard">
+            <span class="mobile-nav-icon">🏠</span>
+            <span class="mobile-nav-label">Dashboard</span>
+        </a>
+        <a href="/events" class="mobile-nav-item" data-route="/events/upcoming">
+            <span class="mobile-nav-icon">📅</span>
+            <span class="mobile-nav-label">Events</span>
+        </a>
+        <a href="/teams" class="mobile-nav-item" data-route="/teams">
+            <span class="mobile-nav-icon">👥</span>
+            <span class="mobile-nav-label">Teams</span>
+        </a>
+        <a href="/profile" class="mobile-nav-item" data-route="/profile">
+            <span class="mobile-nav-icon">👤</span>
+            <span class="mobile-nav-label">Profile</span>
+        </a>
     </div>
+</nav>
 
     <!-- Join Team Modal -->
     <div class="modal" id="joinModal">
