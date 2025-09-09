@@ -14,8 +14,17 @@ const ongoingEvents = [
 
 const pastEvents = [ 
     { id: 7, name: "Boys Basketball Tournament", date: "2025-08-22", emoji: "🏀" }, 
-    { id: 8, name: "Girls Hockey League", date: "2025-08-15", emoji: "🏑" } 
+    { id: 8, name: "Girls Hockey League", date: "2025-08-15", emoji: "🏒" } 
 ];
+
+// --- JWT CONFIGURATION ---
+const JWT_CONFIG = {
+    ACCESS_TOKEN_KEY: 'accessToken',
+    REFRESH_TOKEN_KEY: 'refreshToken',
+    TOKEN_EXPIRY_BUFFER: 2 * 60 * 1000, // 2 minutes before expiry
+    MAX_RETRY_ATTEMPTS: 3,
+    RETRY_DELAY: 1000 // 1 second
+};
 
 // --- ROUTING CONFIGURATION ---
 const ROUTES = {
@@ -43,6 +52,12 @@ const ROUTE_TITLES = {
 // --- CONFIGURATION ---
 const API_BASE_URL = 'https://sportshub-backend-fkye.onrender.com';
 
+// Global variables for token management
+let tokenRefreshTimer = null;
+let isRefreshing = false;
+let refreshPromise = null;
+let failedRequestsQueue = [];
+
 // --- UTILITY FUNCTIONS ---
 function logDebug(message, data = null) {
     console.log(`[DEBUG] ${message}`, data);
@@ -51,30 +66,195 @@ function logDebug(message, data = null) {
 function logError(message, error = null) {
     console.error(`[ERROR] ${message}`, error);
 }
-// --- JWT TOKEN MANAGEMENT ---
-function saveAuthToken(token) {
-    localStorage.setItem('authToken', token);
-    logDebug('JWT token saved to localStorage');
+
+// --- IMPROVED JWT TOKEN MANAGEMENT ---
+function saveAuthTokens(accessToken, refreshToken) {
+    try {
+        if (!isValidTokenFormat(accessToken)) {
+            throw new Error('Invalid access token format');
+        }
+        
+        localStorage.setItem(JWT_CONFIG.ACCESS_TOKEN_KEY, accessToken);
+        if (refreshToken) {
+            localStorage.setItem(JWT_CONFIG.REFRESH_TOKEN_KEY, refreshToken);
+        }
+        
+        scheduleTokenRefresh(accessToken);
+        logDebug('JWT tokens saved with automatic refresh scheduled');
+    } catch (error) {
+        logError('Failed to save auth tokens', error);
+        throw error;
+    }
 }
 
-function getAuthToken() {
-    return localStorage.getItem('authToken');
+function getAccessToken() {
+    const token = localStorage.getItem(JWT_CONFIG.ACCESS_TOKEN_KEY);
+    
+    if (!token) return null;
+    
+    // Check if token is expired or about to expire
+    if (isTokenExpired(token)) {
+        logDebug('Access token expired or about to expire');
+        return null;
+    }
+    
+    return token;
+}
+
+function getRefreshToken() {
+    return localStorage.getItem(JWT_CONFIG.REFRESH_TOKEN_KEY);
 }
 
 function clearAuthData() {
+    localStorage.removeItem(JWT_CONFIG.ACCESS_TOKEN_KEY);
+    localStorage.removeItem(JWT_CONFIG.REFRESH_TOKEN_KEY);
     localStorage.removeItem('sportsHubUser');
-    localStorage.removeItem('authToken');
+    clearTokenRefreshTimer();
     currentUser = null;
+    isRefreshing = false;
+    refreshPromise = null;
+    failedRequestsQueue = [];
     logDebug('Auth data cleared');
+}
+
+// --- TOKEN VALIDATION ---
+function isValidTokenFormat(token) {
+    if (!token || typeof token !== 'string') return false;
+    const parts = token.split('.');
+    return parts.length === 3;
 }
 
 function isTokenExpired(token) {
     try {
+        if (!isValidTokenFormat(token)) return true;
+        
         const payload = JSON.parse(atob(token.split('.')[1]));
         const currentTime = Date.now() / 1000;
-        return payload.exp < currentTime;
+        
+        // Add buffer time for proactive token refresh
+        const expiryWithBuffer = payload.exp - (JWT_CONFIG.TOKEN_EXPIRY_BUFFER / 1000);
+        return currentTime >= expiryWithBuffer;
     } catch (error) {
+        logError('Error checking token expiration', error);
         return true;
+    }
+}
+
+function getTokenPayload(token) {
+    try {
+        if (!isValidTokenFormat(token)) return null;
+        return JSON.parse(atob(token.split('.')[1]));
+    } catch (error) {
+        logError('Error parsing token payload', error);
+        return null;
+    }
+}
+
+// --- AUTO TOKEN REFRESH ---
+function scheduleTokenRefresh(token) {
+    clearTokenRefreshTimer();
+    
+    const payload = getTokenPayload(token);
+    if (!payload) return;
+    
+    const now = Date.now();
+    const expiry = payload.exp * 1000;
+    const refreshTime = expiry - JWT_CONFIG.TOKEN_EXPIRY_BUFFER;
+    
+    if (refreshTime > now) {
+        const delay = refreshTime - now;
+        tokenRefreshTimer = setTimeout(() => {
+            refreshTokenIfPossible();
+        }, delay);
+        
+        logDebug(`Token refresh scheduled in ${Math.round(delay / 1000)} seconds`);
+    }
+}
+
+function clearTokenRefreshTimer() {
+    if (tokenRefreshTimer) {
+        clearTimeout(tokenRefreshTimer);
+        tokenRefreshTimer = null;
+    }
+}
+
+async function refreshTokenIfPossible() {
+    // Prevent multiple simultaneous refresh attempts
+    if (isRefreshing) {
+        return refreshPromise;
+    }
+    
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) {
+        logDebug('No refresh token available, redirecting to login');
+        handleAuthExpiry();
+        return false;
+    }
+    
+    isRefreshing = true;
+    refreshPromise = performTokenRefresh(refreshToken);
+    
+    try {
+        const result = await refreshPromise;
+        return result;
+    } finally {
+        isRefreshing = false;
+        refreshPromise = null;
+    }
+}
+
+async function performTokenRefresh(refreshToken) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ refreshToken })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || 'Token refresh failed');
+        }
+        
+        // Save new tokens
+        saveAuthTokens(data.accessToken, data.refreshToken);
+        
+        // Retry all failed requests with new token
+        processFailedRequestsQueue();
+        
+        logDebug('Token refreshed successfully');
+        return true;
+        
+    } catch (error) {
+        logError('Token refresh failed', error);
+        handleAuthExpiry();
+        return false;
+    }
+}
+
+function addToFailedRequestsQueue(request) {
+    failedRequestsQueue.push(request);
+}
+
+async function processFailedRequestsQueue() {
+    const queue = [...failedRequestsQueue];
+    failedRequestsQueue = [];
+    
+    for (const request of queue) {
+        try {
+            const result = await apiRequest(request.endpoint, request.options);
+            if (request.resolve) {
+                request.resolve(result);
+            }
+        } catch (error) {
+            if (request.reject) {
+                request.reject(error);
+            }
+        }
     }
 }
 
@@ -94,6 +274,92 @@ function handleAuthExpiry() {
     
     showAuth();
     showNotification('Your session has expired. Please login again.', 'warning');
+}
+
+// --- ENHANCED API REQUEST WITH AUTOMATIC TOKEN REFRESH ---
+async function apiRequest(endpoint, options = {}, retryCount = 0) {
+    const url = `${API_BASE_URL}${endpoint}`;
+    
+    // Skip auth for public endpoints
+    const publicEndpoints = ['/api/login', '/api/register', '/api/auth/refresh', '/health'];
+    const skipAuth = publicEndpoints.includes(endpoint);
+    
+    const defaultOptions = {
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    };
+    
+    // Add Authorization header if not skipping auth
+    if (!skipAuth) {
+        const token = getAccessToken();
+        if (token) {
+            defaultOptions.headers['Authorization'] = `Bearer ${token}`;
+        } else if (currentUser) {
+            // Try to refresh token first
+            const refreshed = await refreshTokenIfPossible();
+            if (refreshed) {
+                const newToken = getAccessToken();
+                if (newToken) {
+                    defaultOptions.headers['Authorization'] = `Bearer ${newToken}`;
+                }
+            } else {
+                return { success: false, error: 'Authentication required' };
+            }
+        }
+    }
+    
+    const finalOptions = {
+        ...defaultOptions,
+        ...options,
+        headers: {
+            ...defaultOptions.headers,
+            ...options.headers
+        }
+    };
+    
+    try {
+        const response = await fetch(url, finalOptions);
+        const data = await response.json();
+        
+        logDebug(`API Response (${response.status}):`, data);
+        
+        // Handle authentication errors with token refresh
+        if (response.status === 401 || response.status === 403) {
+            if (!skipAuth && data.code === 'TOKEN_EXPIRED' && retryCount < JWT_CONFIG.MAX_RETRY_ATTEMPTS) {
+                logDebug('Token expired, attempting refresh and retry');
+                
+                const refreshed = await refreshTokenIfPossible();
+                if (refreshed) {
+                    // Retry the original request with new token
+                    return apiRequest(endpoint, options, retryCount + 1);
+                }
+            }
+            
+            logError('Authentication failed, redirecting to login');
+            handleAuthExpiry();
+            return { success: false, error: 'Authentication required' };
+        }
+        
+        if (!response.ok) {
+            throw new Error(data.message || `HTTP error! status: ${response.status}`);
+        }
+        
+        return { success: true, data, status: response.status };
+    } catch (error) {
+        // Handle network errors with retry
+        if (retryCount < JWT_CONFIG.MAX_RETRY_ATTEMPTS && 
+            (error.name === 'TypeError' || error.message.includes('fetch'))) {
+            
+            logDebug(`Network error, retrying in ${JWT_CONFIG.RETRY_DELAY}ms (attempt ${retryCount + 1})`);
+            await new Promise(resolve => setTimeout(resolve, JWT_CONFIG.RETRY_DELAY));
+            return apiRequest(endpoint, options, retryCount + 1);
+        }
+        
+        logError(`API request failed for ${endpoint}`, error);
+        return { success: false, error: error.message };
+    }
 }
 
 // --- SIDEBAR FUNCTIONALITY ---
@@ -154,7 +420,6 @@ function toggleSidebar() {
             sidebarOverlay.classList.toggle('active', isActive);
         }
 
-        // Prevent body scroll when sidebar is open on mobile
         if (window.innerWidth <= 768) {
             document.body.style.overflow = isActive ? 'hidden' : '';
         }
@@ -176,7 +441,6 @@ function closeSidebar() {
         sidebarOverlay.classList.remove('active');
     }
 
-    // Restore body scroll
     document.body.style.overflow = '';
 }
 
@@ -190,9 +454,8 @@ function toggleSubmenu(submenuId) {
     }
 }
 
-// --- UPDATED NAVIGATION FUNCTIONS ---
+// --- NAVIGATION FUNCTIONS ---
 function updateActiveNavigation(currentRoute) {
-    // Update sidebar navigation
     const navItems = document.querySelectorAll('.sidebar .nav-item[data-route]');
     navItems.forEach(item => {
         const route = item.getAttribute('data-route');
@@ -200,7 +463,6 @@ function updateActiveNavigation(currentRoute) {
             (currentRoute.startsWith('/events') && route === '/events'));
     });
 
-    // Update mobile navigation
     const mobileNavItems = document.querySelectorAll('.mobile-nav .mobile-nav-item');
     mobileNavItems.forEach(item => {
         const route = item.getAttribute('data-route');
@@ -209,7 +471,6 @@ function updateActiveNavigation(currentRoute) {
             (currentRoute === '/dashboard' && route === '/dashboard'));
     });
 
-    // Show/hide events submenu based on current route
     if (currentRoute.startsWith('/events')) {
         const eventsSubmenu = document.getElementById('eventsSubmenu');
         const eventsToggle = document.getElementById('eventsToggle');
@@ -220,34 +481,28 @@ function updateActiveNavigation(currentRoute) {
     }
 }
 
-// --- RESPONSIVE HANDLING ---
 function handleResize() {
     const sidebar = document.getElementById('sidebar');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
     
     if (window.innerWidth > 768) {
-        // Desktop: remove overlay and body scroll lock
         if (sidebarOverlay) {
             sidebarOverlay.classList.remove('active');
         }
         document.body.style.overflow = '';
     } else {
-        // Mobile: close sidebar if window is resized to mobile
         if (sidebar?.classList.contains('active')) {
             document.body.style.overflow = 'hidden';
         }
     }
 }
 
-// --- KEYBOARD NAVIGATION ---
 function setupKeyboardNavigation() {
     document.addEventListener('keydown', function(e) {
-        // ESC key closes sidebar
         if (e.key === 'Escape') {
             closeSidebar();
         }
         
-        // Alt + M opens/closes sidebar (accessibility)
         if (e.altKey && e.key === 'm') {
             e.preventDefault();
             toggleSidebar();
@@ -255,7 +510,6 @@ function setupKeyboardNavigation() {
     });
 }
 
-// --- NOTIFICATION PANEL POSITIONING ---
 function setupNotificationHandler() {
     const notifIcon = document.getElementById('notificationIcon');
     const notifPanel = document.getElementById('notificationPanel');
@@ -271,7 +525,6 @@ function setupNotificationHandler() {
         });
     }
     
-    // Close notification panel when clicking outside
     document.addEventListener('click', (e) => {
         if (notifIcon && notifPanel && !notifIcon.contains(e.target) && !notifPanel.contains(e.target)) {
             notifPanel.classList.remove('show');
@@ -281,15 +534,10 @@ function setupNotificationHandler() {
 
 // --- ROUTING FUNCTIONS ---
 function initializeRouter() {
-    // Handle initial page load
     handleRoute();
-    
-    // Handle browser back/forward buttons
     window.addEventListener('popstate', handleRoute);
     
-    // Handle navigation clicks
     document.addEventListener('click', (e) => {
-        // Check if the clicked element or its parent has a route
         const routeElement = e.target.closest('[data-route]');
         if (routeElement) {
             e.preventDefault();
@@ -300,7 +548,6 @@ function initializeRouter() {
 }
 
 function navigateTo(path) {
-    // Update browser URL without page reload
     history.pushState(null, '', path);
     handleRoute();
 }
@@ -309,30 +556,21 @@ function handleRoute() {
     const path = window.location.pathname;
     const sectionId = ROUTES[path] || ROUTES['/dashboard'];
     
-    // Update page title
     document.title = ROUTE_TITLES[path] || 'SportsHub';
-    
-    // Show the appropriate section
     showSectionByRoute(sectionId);
-    
-    // Update navigation active states
     updateActiveNavigation(path);
     
     logDebug(`Navigated to: ${path} -> ${sectionId}`);
 }
 
 function showSectionByRoute(sectionId) {
-    // Hide all sections
     document.querySelectorAll('.section').forEach(section => {
         section.classList.remove('active');
     });
     
-    // Show target section
     const targetSection = document.getElementById(sectionId);
     if (targetSection) {
         targetSection.classList.add('active');
-        
-        // Load section-specific data
         loadSectionData(sectionId);
     }
 }
@@ -361,7 +599,6 @@ function loadSectionData(sectionId) {
 }
 
 function updateDashboardStats() {
-    // Update dashboard counts when returning to dashboard
     const actionCards = document.querySelectorAll('.action-card .count');
     const statCard = document.querySelector('.stat-card:nth-child(3) p');
     
@@ -462,8 +699,7 @@ async function markNotificationsAsRead() {
 
     try {
         const result = await apiRequest('/api/notifications/mark-read', {
-            method: 'POST',
-            body: JSON.stringify({ userEmail: currentUser.email })
+            method: 'POST'
         });
 
         if (result.success) {
@@ -646,58 +882,6 @@ function updateChatStatus(status) {
     }
 }
 
-// --- API FUNCTIONS ---
-async function apiRequest(endpoint, options = {}) {
-    const url = `${API_BASE_URL}${endpoint}`;
-    logDebug(`Making API request to: ${url}`, options);
-    
-    const token = getAuthToken();
-    
-    const defaultOptions = {
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        }
-    };
-    
-    // Add Authorization header if token exists
-    if (token) {
-        defaultOptions.headers['Authorization'] = `Bearer ${token}`;
-    }
-    
-    const finalOptions = {
-        ...defaultOptions,
-        ...options,
-        headers: {
-            ...defaultOptions.headers,
-            ...options.headers
-        }
-    };
-    
-    try {
-        const response = await fetch(url, finalOptions);
-        const data = await response.json();
-        
-        logDebug(`API Response (${response.status}):`, data);
-        
-        // Handle authentication errors
-        if (response.status === 401 || response.status === 403) {
-            logError('Authentication failed, redirecting to login');
-            handleAuthExpiry();
-            return { success: false, error: 'Authentication required' };
-        }
-        
-        if (!response.ok) {
-            throw new Error(data.message || `HTTP error! status: ${response.status}`);
-        }
-        
-        return { success: true, data, status: response.status };
-    } catch (error) {
-        logError(`API request failed for ${endpoint}`, error);
-        return { success: false, error: error.message };
-    }
-}
-
 // --- INITIALIZATION ---
 function init() {
     logDebug('Initializing application');
@@ -708,7 +892,7 @@ function init() {
     setupNotificationHandler();
     loadData();
     
-    if (currentUser) { 
+    if (currentUser && getAccessToken()) { 
         showApp();
         initializeWebSocket();
         initializeRouter();
@@ -716,7 +900,6 @@ function init() {
         showAuth();
     }
 
-    // Add resize listener
     window.addEventListener('resize', handleResize);
 }
 
@@ -799,24 +982,20 @@ function setupEventListeners() {
     setupAuthTabs();
     setupFormValidation();
     
-    // Form submissions
     document.getElementById('loginForm').addEventListener('submit', handleLogin);
     document.getElementById('registerForm').addEventListener('submit', handleRegister);
     document.getElementById('applicationForm').addEventListener('submit', handleApplication);
     
-    // Search and filter
     const searchInput = document.getElementById('searchInput');
     const categoryFilter = document.getElementById('categoryFilter');
     if (searchInput) searchInput.addEventListener('input', () => renderEvents(filterEvents(upcomingEvents), 'upcomingEventsGrid', true));
     if (categoryFilter) categoryFilter.addEventListener('change', () => renderEvents(filterEvents(upcomingEvents), 'upcomingEventsGrid', true));
     
-    // Profile actions
     document.getElementById('changePhotoButton').addEventListener('click', handleChangePhoto);
     document.getElementById('logoutButton').addEventListener('click', handleLogout);
     document.getElementById('editProfileButton').addEventListener('click', handleEditProfileClick);
     document.getElementById('avatarUploadInput').addEventListener('change', handleFileUpload);
     
-    // Click outside handlers
     window.addEventListener('click', (e) => { 
         if (e.target.id === 'joinModal') closeJoinModal(); 
         if (e.target.id === 'chatModal') closeChatModal();
@@ -864,8 +1043,8 @@ async function handleLogin(e) {
     });
     
     if (result.success) {
-        // Save the JWT token
-        saveAuthToken(result.data.token);
+        // Save the JWT tokens
+        saveAuthTokens(result.data.accessToken, result.data.refreshToken);
         
         currentUser = {
             ...result.data.user,
@@ -881,7 +1060,7 @@ async function handleLogin(e) {
         navigateTo('/dashboard'); 
         showNotification(result.data.message, 'success');
         
-        logDebug('Login successful, token saved');
+        logDebug('Login successful, tokens saved');
     } else {
         showNotification(result.error, 'error');
     }
@@ -919,9 +1098,12 @@ async function handleRegister(e) {
 async function handleLogout() {
     logDebug('Handling logout');
     
+    const refreshToken = getRefreshToken();
+    
     // Call logout API endpoint
     await apiRequest('/api/logout', {
-        method: 'POST'
+        method: 'POST',
+        body: JSON.stringify({ refreshToken })
     });
     
     // Clear local data
@@ -953,7 +1135,6 @@ async function handleEditProfileClick() {
 
     if (isEditing) {
         const updatedData = {
-            email: currentUser.email,
             fullName: document.getElementById('editProfileFullName').value,
             mobileNumber: document.getElementById('editProfileMobileNumber').value
         };
@@ -989,11 +1170,14 @@ async function handleFileUpload(event) {
 
     const formData = new FormData();
     formData.append('avatar', file);
-    formData.append('userEmail', currentUser.email);
 
     try {
+        const token = getAccessToken();
         const response = await fetch(`${API_BASE_URL}/api/profile/avatar-upload`, {
             method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
             body: formData 
         });
 
@@ -1026,7 +1210,6 @@ async function handleApplication(e) {
         return;
     }
     
-    // We no longer need to send userFullName - it comes from the token
     const applicationData = {
         userRegNumber: document.getElementById('applicantRegNumber').value,
         userExperience: parseInt(document.getElementById('applicantExperience').value)
@@ -1063,10 +1246,7 @@ async function handleLeaveTeam(teamName) {
     
     const result = await apiRequest('/api/teams/leave', {
         method: 'POST',
-        body: JSON.stringify({ 
-            userFullName: currentUser.fullName, 
-            teamName 
-        })
+        body: JSON.stringify({ teamName })
     });
     
     if (result.success) {
@@ -1245,7 +1425,7 @@ function createEventCard(e, i, j) {
         a = (e.team.members.length < e.team.maxSlots) ? `<button class="join-btn" onclick="openJoinModal(${i})">Join ${e.team.name}</button>` : `<div class="team-full">Team Full</div>`; 
         if (e.difficulty) a += `<span class="difficulty-badge ${c}">${e.difficulty}</span>`; 
     } 
-    d.innerHTML = `<div class="event-header"><div class="event-emoji">${e.emoji}</div>${b}</div><h3 class="event-title">${e.name}</h3><div class="event-details"><div class="event-detail"><span>📅</span><span>${e.date}</span></div><div class="event-detail"><span>🕐</span><span>${e.time}</span></div><div class="event-detail"><span>📍</span><span>${e.location}</span></div></div>${a ? `<div class="event-actions">${a}</div>` : ''}`; 
+    d.innerHTML = `<div class="event-header"><div class="event-emoji">${e.emoji}</div>${b}</div><h3 class="event-title">${e.name}</h3><div class="event-details"><div class="event-detail"><span>📅</span><span>${e.date}</span></div><div class="event-detail"><span>🕒</span><span>${e.time}</span></div><div class="event-detail"><span>📍</span><span>${e.location}</span></div></div>${a ? `<div class="event-actions">${a}</div>` : ''}`; 
     return d; 
 }
 
@@ -1332,7 +1512,6 @@ function closeJoinModal() {
 
 // Updated showSection function - now deprecated in favor of navigateTo
 function showSection(s) {
-    // Map old section IDs to new routes
     const sectionToRoute = {
         'dashboardSection': '/dashboard',
         'upcomingSection': '/events/upcoming',
@@ -1507,6 +1686,26 @@ window.addEventListener('error', function(e) {
 window.addEventListener('unhandledrejection', function(e) {
     logError('Unhandled promise rejection:', e.reason);
     showNotification('A network error occurred. Please check your connection.', 'error');
+});
+
+// --- TOKEN MONITORING ---
+// Check token validity periodically when app is active
+setInterval(() => {
+    if (currentUser && !getAccessToken()) {
+        logDebug('Access token invalid, attempting refresh');
+        refreshTokenIfPossible();
+    }
+}, 60000); // Check every minute
+
+// Handle page visibility changes for token management
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && currentUser) {
+        // Page became visible, check if token needs refresh
+        const token = getAccessToken();
+        if (!token) {
+            refreshTokenIfPossible();
+        }
+    }
 });
 
 // Start the app
