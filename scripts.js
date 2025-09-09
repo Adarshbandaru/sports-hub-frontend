@@ -51,6 +51,50 @@ function logDebug(message, data = null) {
 function logError(message, error = null) {
     console.error(`[ERROR] ${message}`, error);
 }
+// --- JWT TOKEN MANAGEMENT ---
+function saveAuthToken(token) {
+    localStorage.setItem('authToken', token);
+    logDebug('JWT token saved to localStorage');
+}
+
+function getAuthToken() {
+    return localStorage.getItem('authToken');
+}
+
+function clearAuthData() {
+    localStorage.removeItem('sportsHubUser');
+    localStorage.removeItem('authToken');
+    currentUser = null;
+    logDebug('Auth data cleared');
+}
+
+function isTokenExpired(token) {
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const currentTime = Date.now() / 1000;
+        return payload.exp < currentTime;
+    } catch (error) {
+        return true;
+    }
+}
+
+function handleAuthExpiry() {
+    logDebug('Authentication expired');
+    clearAuthData();
+    
+    if (websocket) {
+        websocket.close();
+        websocket = null;
+    }
+    
+    if (notificationWebSocket) {
+        notificationWebSocket.close();
+        notificationWebSocket = null;
+    }
+    
+    showAuth();
+    showNotification('Your session has expired. Please login again.', 'warning');
+}
 
 // --- SIDEBAR FUNCTIONALITY ---
 function setupSidebarEventListeners() {
@@ -607,12 +651,19 @@ async function apiRequest(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
     logDebug(`Making API request to: ${url}`, options);
     
+    const token = getAuthToken();
+    
     const defaultOptions = {
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         }
     };
+    
+    // Add Authorization header if token exists
+    if (token) {
+        defaultOptions.headers['Authorization'] = `Bearer ${token}`;
+    }
     
     const finalOptions = {
         ...defaultOptions,
@@ -628,6 +679,13 @@ async function apiRequest(endpoint, options = {}) {
         const data = await response.json();
         
         logDebug(`API Response (${response.status}):`, data);
+        
+        // Handle authentication errors
+        if (response.status === 401 || response.status === 403) {
+            logError('Authentication failed, redirecting to login');
+            handleAuthExpiry();
+            return { success: false, error: 'Authentication required' };
+        }
         
         if (!response.ok) {
             throw new Error(data.message || `HTTP error! status: ${response.status}`);
@@ -806,22 +864,24 @@ async function handleLogin(e) {
     });
     
     if (result.success) {
+        // Save the JWT token
+        saveAuthToken(result.data.token);
+        
         currentUser = {
             ...result.data.user,
             avatarUrl: result.data.user.avatarUrl || null,
             joinedTeams: result.data.user.joinedTeams || [],
-            notifications: result.data.user.notifications || [{ 
-                icon: "🏆", 
-                title: `Welcome back, ${result.data.user.fullName}!`, 
-                body: "Explore events and join the fun." 
-            }]
+            notifications: result.data.user.notifications || []
         };
+        
         saveData();
         showApp();
         initializeWebSocket();
         initializeRouter();
         navigateTo('/dashboard'); 
         showNotification(result.data.message, 'success');
+        
+        logDebug('Login successful, token saved');
     } else {
         showNotification(result.error, 'error');
     }
@@ -856,10 +916,16 @@ async function handleRegister(e) {
     }
 }
 
-function handleLogout() {
+async function handleLogout() {
     logDebug('Handling logout');
-    currentUser = null;
-    localStorage.removeItem('sportsHubUser');
+    
+    // Call logout API endpoint
+    await apiRequest('/api/logout', {
+        method: 'POST'
+    });
+    
+    // Clear local data
+    clearAuthData();
     
     if (websocket) {
         websocket.close();
@@ -871,7 +937,8 @@ function handleLogout() {
         notificationWebSocket = null;
     }
     
-    window.location.reload();
+    showAuth();
+    showNotification('Logged out successfully', 'success');
 }
 
 function handleChangePhoto() {
@@ -953,38 +1020,19 @@ async function handleApplication(e) {
     
     const event = upcomingEvents[currentEventIndex];
     
-    logDebug('Current event index:', currentEventIndex);
-    logDebug('Total upcoming events:', upcomingEvents.length);
-    logDebug('Event object:', event);
-    logDebug('Event ID type:', typeof event?.id);
-    logDebug('Event ID value:', event?.id);
-    
-    if (!event) {
-        logError('Event is null or undefined');
+    if (!event || (!event.id && event.id !== 0)) {
+        logError('Event data is missing or invalid');
         showNotification('Event data is missing. Please refresh and try again.', 'error');
         return;
     }
     
-    if (!event.id && event.id !== 0) {
-        logError('Event ID is missing or invalid');
-        showNotification('Event ID is missing. Please refresh and try again.', 'error');
-        return;
-    }
-    
-    if (!event.team) {
-        logError('Event team is missing');
-        showNotification('Team information is missing. Please refresh and try again.', 'error');
-        return;
-    }
-    
+    // We no longer need to send userFullName - it comes from the token
     const applicationData = {
-        userFullName: currentUser.fullName,
         userRegNumber: document.getElementById('applicantRegNumber').value,
         userExperience: parseInt(document.getElementById('applicantExperience').value)
     };
     
     logDebug('Application data:', applicationData);
-    logDebug('API URL that will be called:', `/api/events/${event.id}/join`);
     
     const result = await apiRequest(`/api/events/${event.id}/join`, {
         method: 'POST',
