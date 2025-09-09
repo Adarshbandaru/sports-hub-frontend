@@ -52,6 +52,189 @@ function logError(message, error = null) {
     console.error(`[ERROR] ${message}`, error);
 }
 
+// --- SIDEBAR FUNCTIONALITY ---
+function setupSidebarEventListeners() {
+    const hamburgerMenu = document.getElementById('hamburgerMenu');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const eventsToggle = document.getElementById('eventsToggle');
+    const sidebarLogout = document.getElementById('sidebarLogout');
+
+    // Hamburger menu toggle
+    if (hamburgerMenu) {
+        hamburgerMenu.addEventListener('click', toggleSidebar);
+    }
+
+    // Close sidebar when clicking overlay
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', closeSidebar);
+    }
+
+    // Events submenu toggle
+    if (eventsToggle) {
+        eventsToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            toggleSubmenu('eventsSubmenu');
+        });
+    }
+
+    // Sidebar logout
+    if (sidebarLogout) {
+        sidebarLogout.addEventListener('click', function(e) {
+            e.preventDefault();
+            handleLogout();
+        });
+    }
+
+    // Close sidebar when clicking navigation items on mobile
+    const navItems = sidebar?.querySelectorAll('.nav-item[data-route]');
+    navItems?.forEach(item => {
+        item.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                closeSidebar();
+            }
+        });
+    });
+}
+
+function toggleSidebar() {
+    const hamburgerMenu = document.getElementById('hamburgerMenu');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    if (sidebar && hamburgerMenu) {
+        const isActive = sidebar.classList.toggle('active');
+        hamburgerMenu.classList.toggle('active', isActive);
+        
+        if (sidebarOverlay) {
+            sidebarOverlay.classList.toggle('active', isActive);
+        }
+
+        // Prevent body scroll when sidebar is open on mobile
+        if (window.innerWidth <= 768) {
+            document.body.style.overflow = isActive ? 'hidden' : '';
+        }
+    }
+}
+
+function closeSidebar() {
+    const hamburgerMenu = document.getElementById('hamburgerMenu');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    if (sidebar) {
+        sidebar.classList.remove('active');
+    }
+    if (hamburgerMenu) {
+        hamburgerMenu.classList.remove('active');
+    }
+    if (sidebarOverlay) {
+        sidebarOverlay.classList.remove('active');
+    }
+
+    // Restore body scroll
+    document.body.style.overflow = '';
+}
+
+function toggleSubmenu(submenuId) {
+    const submenu = document.getElementById(submenuId);
+    const toggle = document.getElementById(submenuId.replace('Submenu', 'Toggle'));
+    
+    if (submenu && toggle) {
+        const isActive = submenu.classList.toggle('active');
+        toggle.classList.toggle('expanded', isActive);
+    }
+}
+
+// --- UPDATED NAVIGATION FUNCTIONS ---
+function updateActiveNavigation(currentRoute) {
+    // Update sidebar navigation
+    const navItems = document.querySelectorAll('.sidebar .nav-item[data-route]');
+    navItems.forEach(item => {
+        const route = item.getAttribute('data-route');
+        item.classList.toggle('active', route === currentRoute || 
+            (currentRoute.startsWith('/events') && route === '/events'));
+    });
+
+    // Update mobile navigation
+    const mobileNavItems = document.querySelectorAll('.mobile-nav .mobile-nav-item');
+    mobileNavItems.forEach(item => {
+        const route = item.getAttribute('data-route');
+        item.classList.toggle('active', route === currentRoute ||
+            (currentRoute.startsWith('/events') && route === '/events/upcoming') ||
+            (currentRoute === '/dashboard' && route === '/dashboard'));
+    });
+
+    // Show/hide events submenu based on current route
+    if (currentRoute.startsWith('/events')) {
+        const eventsSubmenu = document.getElementById('eventsSubmenu');
+        const eventsToggle = document.getElementById('eventsToggle');
+        if (eventsSubmenu && eventsToggle) {
+            eventsSubmenu.classList.add('active');
+            eventsToggle.classList.add('expanded');
+        }
+    }
+}
+
+// --- RESPONSIVE HANDLING ---
+function handleResize() {
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    
+    if (window.innerWidth > 768) {
+        // Desktop: remove overlay and body scroll lock
+        if (sidebarOverlay) {
+            sidebarOverlay.classList.remove('active');
+        }
+        document.body.style.overflow = '';
+    } else {
+        // Mobile: close sidebar if window is resized to mobile
+        if (sidebar?.classList.contains('active')) {
+            document.body.style.overflow = 'hidden';
+        }
+    }
+}
+
+// --- KEYBOARD NAVIGATION ---
+function setupKeyboardNavigation() {
+    document.addEventListener('keydown', function(e) {
+        // ESC key closes sidebar
+        if (e.key === 'Escape') {
+            closeSidebar();
+        }
+        
+        // Alt + M opens/closes sidebar (accessibility)
+        if (e.altKey && e.key === 'm') {
+            e.preventDefault();
+            toggleSidebar();
+        }
+    });
+}
+
+// --- NOTIFICATION PANEL POSITIONING ---
+function setupNotificationHandler() {
+    const notifIcon = document.getElementById('notificationIcon');
+    const notifPanel = document.getElementById('notificationPanel');
+    
+    if (notifIcon && notifPanel) {
+        notifIcon.addEventListener('click', (e) => { 
+            e.stopPropagation(); 
+            const isVisible = notifPanel.classList.toggle('show'); 
+            if (isVisible) {
+                renderNotifications();
+                markNotificationsAsRead();
+            }
+        });
+    }
+    
+    // Close notification panel when clicking outside
+    document.addEventListener('click', (e) => {
+        if (notifIcon && notifPanel && !notifIcon.contains(e.target) && !notifPanel.contains(e.target)) {
+            notifPanel.classList.remove('show');
+        }
+    });
+}
+
 // --- ROUTING FUNCTIONS ---
 function initializeRouter() {
     // Handle initial page load
@@ -87,6 +270,9 @@ function handleRoute() {
     
     // Show the appropriate section
     showSectionByRoute(sectionId);
+    
+    // Update navigation active states
+    updateActiveNavigation(path);
     
     logDebug(`Navigated to: ${path} -> ${sectionId}`);
 }
@@ -459,16 +645,21 @@ function init() {
     logDebug('Initializing application');
     setupEventListeners();
     setupChatEventListeners();
+    setupSidebarEventListeners();
+    setupKeyboardNavigation();
+    setupNotificationHandler();
     loadData();
     
     if (currentUser) { 
         showApp();
         initializeWebSocket();
-        // Initialize routing after showing app
         initializeRouter();
     } else { 
         showAuth();
     }
+
+    // Add resize listener
+    window.addEventListener('resize', handleResize);
 }
 
 function showAuth() {
@@ -567,28 +758,10 @@ function setupEventListeners() {
     document.getElementById('editProfileButton').addEventListener('click', handleEditProfileClick);
     document.getElementById('avatarUploadInput').addEventListener('change', handleFileUpload);
     
-    // Notification panel
-    const notifIcon = document.getElementById('notificationIcon');
-    const notifPanel = document.getElementById('notificationPanel');
-    
-    if (notifIcon && notifPanel) {
-        notifIcon.addEventListener('click', (e) => { 
-            e.stopPropagation(); 
-            const isVisible = notifPanel.classList.toggle('show'); 
-            if (isVisible) {
-                renderNotifications();
-                markNotificationsAsRead();
-            }
-        });
-    }
-    
     // Click outside handlers
     window.addEventListener('click', (e) => { 
         if (e.target.id === 'joinModal') closeJoinModal(); 
         if (e.target.id === 'chatModal') closeChatModal();
-        if (notifIcon && notifPanel && !notifIcon.contains(e.target)) {
-            notifPanel.classList.remove('show');
-        } 
     });
 }
 
@@ -646,7 +819,6 @@ async function handleLogin(e) {
         saveData();
         showApp();
         initializeWebSocket();
-        // Initialize routing after successful login
         initializeRouter();
         navigateTo('/dashboard'); 
         showNotification(result.data.message, 'success');
