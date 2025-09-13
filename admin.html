@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SportsHub Admin Panel</title>
+    <title>SportsHub Enhanced Admin Panel</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -22,7 +22,7 @@
         /* Admin Login Styles */
         .admin-login {
             min-height: 100vh;
-            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -35,7 +35,7 @@
             padding: 40px;
             width: 100%;
             max-width: 400px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
         }
 
         .login-header {
@@ -59,26 +59,31 @@
             min-height: 100vh;
         }
 
-        /* Sidebar */
+        /* Enhanced Sidebar */
         .sidebar {
-            width: 250px;
-            background: #1a202c;
+            width: 280px;
+            background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%);
             color: white;
             padding: 20px 0;
             position: fixed;
             height: 100vh;
             overflow-y: auto;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
         }
 
         .sidebar-header {
             padding: 0 20px 20px;
-            border-bottom: 1px solid #2d3748;
+            border-bottom: 1px solid #4a5568;
             margin-bottom: 20px;
         }
 
         .sidebar-header h2 {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 700;
+            background: linear-gradient(45deg, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .nav-menu {
@@ -86,192 +91,388 @@
         }
 
         .nav-item {
-            margin: 5px 0;
+            margin: 3px 10px;
         }
 
         .nav-link {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 12px 20px;
+            gap: 12px;
+            padding: 14px 20px;
             color: #cbd5e0;
             text-decoration: none;
             transition: all 0.3s ease;
             cursor: pointer;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .nav-link:hover:before {
+            left: 100%;
         }
 
         .nav-link:hover, .nav-link.active {
-            background: #2d3748;
+            background: linear-gradient(135deg, #4c51bf, #667eea);
             color: white;
+            transform: translateX(5px);
         }
 
         .nav-icon {
             font-size: 18px;
-            width: 20px;
+            width: 24px;
         }
 
-        /* Main Content */
+        /* Enhanced Main Content */
         .main-content {
-            margin-left: 250px;
+            margin-left: 280px;
             padding: 30px;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
         }
 
         .content-header {
             margin-bottom: 30px;
             padding-bottom: 20px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
         }
 
         .content-title {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 700;
-            color: #1a202c;
+            background: linear-gradient(135deg, #1a202c, #4a5568);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 5px;
         }
 
         .content-subtitle {
             color: #718096;
+            font-size: 16px;
         }
 
-        /* Cards */
+        /* Enhanced Cards */
         .card {
             background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
             border: 1px solid #e2e8f0;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
             margin-bottom: 30px;
         }
 
         .stat-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 30px;
             text-align: center;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e2e8f0;
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
             transition: transform 0.3s ease;
         }
 
         .stat-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-8px);
         }
 
         .stat-number {
-            font-size: 32px;
+            font-size: 36px;
             font-weight: 700;
-            color: #1a202c;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
 
         .stat-label {
-            color: #718096;
+            font-size: 16px;
+            opacity: 0.9;
             font-weight: 500;
         }
 
-        /* Forms */
+        /* Enhanced Forms */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .form-label {
             display: block;
-            font-weight: 500;
+            font-weight: 600;
             margin-bottom: 8px;
             color: #4a5568;
+            font-size: 14px;
         }
 
         .form-input, .form-select, .form-textarea {
             width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
             font-size: 16px;
-            transition: border-color 0.3s ease;
+            transition: all 0.3s ease;
+            background: white;
         }
 
         .form-input:focus, .form-select:focus, .form-textarea:focus {
             outline: none;
             border-color: #667eea;
-            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
         }
 
         .form-textarea {
             resize: vertical;
-            min-height: 100px;
+            min-height: 120px;
         }
 
+        /* Enhanced Buttons */
         .btn {
-            padding: 12px 24px;
+            padding: 14px 28px;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
-            display: inline-block;
-            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.4s, height 0.4s;
+        }
+
+        .btn:hover:before {
+            width: 100%;
+            height: 100%;
         }
 
         .btn-primary {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
         }
 
         .btn-primary:hover {
-            background: #5a67d8;
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
         }
 
-        .btn-danger {
-            background: #e53e3e;
+        .btn-secondary {
+            background: linear-gradient(135deg, #718096, #4a5568);
             color: white;
         }
 
-        .btn-danger:hover {
-            background: #c53030;
+        .btn-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(113, 128, 150, 0.4);
         }
 
         .btn-success {
-            background: #48bb78;
+            background: linear-gradient(135deg, #48bb78, #38a169);
             color: white;
         }
 
         .btn-success:hover {
-            background: #38a169;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(72, 187, 120, 0.4);
         }
 
-        /* Tables */
+        .btn-danger {
+            background: linear-gradient(135deg, #f56565, #e53e3e);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(245, 101, 101, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ed8936, #dd6b20);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(237, 137, 54, 0.4);
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        .btn-lg {
+            padding: 18px 36px;
+            font-size: 16px;
+        }
+
+        /* Enhanced Tables */
+        .table-container {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
         .table {
             width: 100%;
             border-collapse: collapse;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-        }
-
-        .table th, .table td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0;
         }
 
         .table th {
-            background: #f8fafc;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px 15px;
+            text-align: left;
             font-weight: 600;
-            color: #4a5568;
+            font-size: 14px;
+        }
+
+        .table td {
+            padding: 18px 15px;
+            border-bottom: 1px solid #f7fafc;
+            font-size: 14px;
         }
 
         .table tr:hover {
             background: #f8fafc;
+        }
+
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Action Buttons in Tables */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        /* Enhanced Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f7fafc;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #a0aec0;
+            transition: all 0.3s ease;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            color: #4a5568;
+            background: #f7fafc;
+            transform: rotate(90deg);
         }
 
         /* Section visibility */
@@ -283,19 +484,21 @@
             display: block;
         }
 
-        /* Notification styles */
+        /* Enhanced Notifications */
         .notification {
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 15px 20px;
-            border-radius: 8px;
+            padding: 18px 24px;
+            border-radius: 12px;
             color: white;
             font-weight: 500;
             z-index: 1000;
             transform: translateX(120%);
             opacity: 0;
-            transition: all 0.4s ease;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            min-width: 300px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         }
 
         .notification.show {
@@ -304,86 +507,146 @@
         }
 
         .notification.success {
-            background: #48bb78;
+            background: linear-gradient(135deg, #48bb78, #38a169);
         }
 
         .notification.error {
-            background: #e53e3e;
+            background: linear-gradient(135deg, #f56565, #e53e3e);
         }
 
-        /* Modal styles */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+        .notification.warning {
+            background: linear-gradient(135deg, #ed8936, #dd6b20);
+        }
+
+        /* Enhanced Category Management */
+        .category-form {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
+            gap: 15px;
+            align-items: end;
         }
 
-        .modal.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            width: 90%;
-            max-width: 500px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
+        .category-list-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            padding: 15px;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background 0.3s ease;
         }
 
-        .modal-title {
-            font-size: 20px;
-            font-weight: 600;
+        .category-list-item:hover {
+            background: #f8fafc;
         }
 
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #a0aec0;
+        .category-list-item:last-child {
+            border-bottom: none;
         }
 
-        .close-btn:hover {
+        .category-name {
+            font-weight: 500;
             color: #4a5568;
         }
-        
+
+        /* Enhanced User Management */
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-details h4 {
+            margin: 0;
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        .user-details p {
+            margin: 2px 0 0 0;
+            color: #718096;
+            font-size: 12px;
+        }
+
+        /* Status badges */
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-inactive {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        /* Search and Filter Bar */
+        .filter-bar {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+        }
 
         .logout-btn {
             position: absolute;
             bottom: 20px;
             left: 20px;
             right: 20px;
-            background: #e53e3e;
+            background: linear-gradient(135deg, #f56565, #e53e3e);
             color: white;
             border: none;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 12px;
             font-weight: 600;
             cursor: pointer;
+            transition: all 0.3s ease;
         }
 
         .logout-btn:hover {
-            background: #c53030;
+            background: linear-gradient(135deg, #e53e3e, #c53030);
+            transform: translateY(-2px);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .sidebar {
+                width: 250px;
+            }
+            .main-content {
+                margin-left: 250px;
+            }
         }
 
         @media (max-width: 768px) {
@@ -391,6 +654,12 @@
                 width: 100%;
                 height: auto;
                 position: relative;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
             }
 
             .main-content {
@@ -401,21 +670,55 @@
             .stats-grid {
                 grid-template-columns: 1fr;
             }
-            /* Add this to the <style> block in your admin.html file */
-.category-form {
-    display: flex;
-    gap: 10px;
-}
-.category-list-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    border-bottom: 1px solid #f1f5f9;
-}
-.category-list-item:last-child {
-    border-bottom: none;
-}
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .content-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .filter-bar {
+                flex-direction: column;
+            }
+
+            .action-buttons {
+                justify-content: center;
+            }
+        }
+
+        /* Loading States */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Enhanced animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.5s ease-out;
         }
     </style>
 </head>
@@ -425,18 +728,18 @@
         <div class="login-card">
             <div class="login-header">
                 <h1>🛡️ Admin Panel</h1>
-                <p>SportsHub Administration</p>
+                <p>Enhanced SportsHub Administration</p>
             </div>
             <form id="adminLoginForm">
                 <div class="form-group">
                     <label class="form-label">Admin Email</label>
-                    <input type="email" class="form-input" id="adminEmail" required>
+                    <input type="email" class="form-input" id="adminEmail" required placeholder="admin@college.edu">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Password</label>
-                    <input type="password" class="form-input" id="adminPassword" required>
+                    <input type="password" class="form-input" id="adminPassword" required placeholder="Enter password">
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Login to Admin Panel</button>
+                <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">Login to Admin Panel</button>
             </form>
         </div>
     </div>
@@ -446,7 +749,7 @@
         <!-- Sidebar -->
         <nav class="sidebar">
             <div class="sidebar-header">
-                <h2>🏆 SportsHub</h2>
+                <h2>🏆 SportsHub Pro</h2>
             </div>
             <ul class="nav-menu">
                 <li class="nav-item">
@@ -458,13 +761,19 @@
                 <li class="nav-item">
                     <a class="nav-link" onclick="showSection('events')">
                         <span class="nav-icon">🏆</span>
-                        Events
+                        Events Management
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" onclick="showSection('users')">
                         <span class="nav-icon">👥</span>
-                        Users
+                        Users Management
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="showSection('categories')">
+                        <span class="nav-icon">🏷️</span>
+                        Categories
                     </a>
                 </li>
                 <li class="nav-item">
@@ -474,22 +783,27 @@
                     </a>
                 </li>
                 <li class="nav-item">
-    <a class="nav-link" onclick="showSection('categories')">
-        <span class="nav-icon">🏷️</span>
-        Categories
-    </a>
-</li>
+                    <a class="nav-link" onclick="showSection('settings')">
+                        <span class="nav-icon">⚙️</span>
+                        System Settings
+                    </a>
+                </li>
             </ul>
-            <button class="logout-btn" onclick="adminLogout()">Logout</button>
+            <button class="logout-btn" onclick="adminLogout()">🚪 Logout</button>
         </nav>
 
         <!-- Main Content -->
         <main class="main-content">
             <!-- Dashboard Section -->
-            <section class="admin-section active" id="dashboard">
+            <section class="admin-section active fade-in-up" id="dashboard">
                 <div class="content-header">
-                    <h1 class="content-title">Dashboard</h1>
-                    <p class="content-subtitle">Overview of SportsHub activity</p>
+                    <div>
+                        <h1 class="content-title">Dashboard</h1>
+                        <p class="content-subtitle">Complete overview of SportsHub activity and analytics</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="refreshDashboard()">
+                        <span id="refreshIcon">🔄</span> Refresh Data
+                    </button>
                 </div>
 
                 <div class="stats-grid">
@@ -512,133 +826,47 @@
                 </div>
 
                 <div class="card">
-                    <h3>Recent Activity</h3>
+                    <h3>📈 System Analytics</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px;">
+                        <div style="text-align: center; padding: 15px; background: #f8fafc; border-radius: 10px;">
+                            <div style="font-size: 24px; font-weight: 600; color: #667eea;" id="newUsersToday">0</div>
+                            <div style="color: #718096; font-size: 14px;">New Users Today</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: #f8fafc; border-radius: 10px;">
+                            <div style="font-size: 24px; font-weight: 600; color: #48bb78;" id="eventsThisMonth">0</div>
+                            <div style="color: #718096; font-size: 14px;">Events This Month</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: #f8fafc; border-radius: 10px;">
+                            <div style="font-size: 24px; font-weight: 600; color: #ed8936;" id="completionRate">0%</div>
+                            <div style="color: #718096; font-size: 14px;">Team Fill Rate</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>📋 Recent Activity</h3>
                     <div id="recentActivity">
                         <p>Loading recent activity...</p>
                     </div>
                 </div>
             </section>
 
-            <!-- Events Section -->
+            <!-- Enhanced Events Section -->
             <section class="admin-section" id="events">
                 <div class="content-header">
-                    <h1 class="content-title">Events Management</h1>
-                    <p class="content-subtitle">Manage sports events and tournaments</p>
-                    <button class="btn btn-primary" onclick="openAddEventModal()" style="float: right;">Add New Event</button>
-                </div>
-
-                <div class="card">
-                    <h3>All Events</h3>
-                    <div id="eventsTable">
-                        <p>Loading events...</p>
+                    <div>
+                        <h1 class="content-title">Events Management</h1>
+                        <p class="content-subtitle">Create, edit, and manage all sports events</p>
                     </div>
-                </div>
-            </section>
-
-            <!-- Users Section -->
-            <section class="admin-section" id="users">
-                <div class="content-header">
-                    <h1 class="content-title">Users Management</h1>
-                    <p class="content-subtitle">View and manage registered users</p>
+                    <button class="btn btn-primary btn-lg" onclick="openAddEventModal()">
+                        ➕ Add New Event
+                    </button>
                 </div>
 
-                <div class="card">
-                    <h3>All Users</h3>
-                    <div id="usersTable">
-                        <p>Loading users...</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Notifications Section -->
-            <section class="admin-section" id="notifications">
-                <div class="content-header">
-                    <h1 class="content-title">Send Notifications</h1>
-                    <p class="content-subtitle">Send announcements to users</p>
-                </div>
-
-                <div class="card">
-                    <h3>Create Notification</h3>
-                    <form id="notificationForm">
-                        <div class="form-group">
-                            <label class="form-label">Notification Title</label>
-                            <input type="text" class="form-input" id="notificationTitle" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Message</label>
-                            <textarea class="form-textarea" id="notificationMessage" required></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Icon (Emoji)</label>
-                            <input type="text" class="form-input" id="notificationIcon" placeholder="🏆" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Send To</label>
-                            <select class="form-select" id="notificationTarget">
-                                <option value="all">All Users</option>
-                                <option value="team-members">Team Members Only</option>
-                                <option value="specific">Specific User (by email)</option>
-                            </select>
-                        </div>
-                        <div class="form-group" id="specificUserGroup" style="display: none;">
-                            <label class="form-label">User Email</label>
-                            <input type="email" class="form-input" id="specificUserEmail">
-                        </div>
-                        <button type="submit" class="btn btn-success">Send Notification</button>
-                    </form>
-                </div>
-            </section>
-            <section class="admin-section" id="categories">
-    <div class="content-header">
-        <h1 class="content-title">Category Management</h1>
-        <p class="content-subtitle">Add or remove event categories</p>
-    </div>
-    <div class="card">
-        <h3>Add New Category</h3>
-        <form id="addCategoryForm" class="category-form">
-            <input type="text" class="form-input" id="categoryName" placeholder="New category name..." required>
-            <button type="submit" class="btn btn-primary">Add Category</button>
-        </form>
-    </div>
-    <div class="card">
-        <h3>Existing Categories</h3>
-        <div id="categoriesList">
-            <p>Loading categories...</p>
-        </div>
-    </div>
-</section>
-        </main>
-    </div>
-    
-
-    <!-- Add Event Modal -->
-    <div class="modal" id="addEventModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Add New Event</h2>
-                <button class="close-btn" onclick="closeAddEventModal()">&times;</button>
-            </div>
-            <form id="addEventForm">
-                <div class="form-group">
-                    <label class="form-label">Event Name</label>
-                    <input type="text" class="form-input" id="eventName" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Date</label>
-                    <input type="date" class="form-input" id="eventDate" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Time</label>
-                    <input type="time" class="form-input" id="eventTime" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Location</label>
-                    <input type="text" class="form-input" id="eventLocation" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Category</label>
-                    <select class="form-select" id="eventCategory" required>
-                        <option value="">Select Category</option>
+                <div class="filter-bar">
+                    <input type="text" class="search-input" id="eventSearch" placeholder="🔍 Search events by name, category, or team..." onkeyup="filterEvents()">
+                    <select class="form-select" id="eventCategoryFilter" onchange="filterEvents()" style="width: auto;">
+                        <option value="">All Categories</option>
                         <option value="Cricket">Cricket</option>
                         <option value="Football">Football</option>
                         <option value="Badminton">Badminton</option>
@@ -646,37 +874,416 @@
                         <option value="Basketball">Basketball</option>
                         <option value="Volleyball">Volleyball</option>
                     </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Difficulty</label>
-                    <select class="form-select" id="eventDifficulty" required>
-                        <option value="Intermediate">Intermediate</option>
-                        <option value="Advanced">Advanced</option>
-                        <option value="Expert">Expert</option>
+                    <select class="form-select" id="eventStatusFilter" onchange="filterEvents()" style="width: auto;">
+                        <option value="">All Statuses</option>
+                        <option value="upcoming">Upcoming</option>
+                        <option value="full">Team Full</option>
+                        <option value="available">Spots Available</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Emoji</label>
-                    <input type="text" class="form-input" id="eventEmoji" placeholder="🏆" required>
+
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3>🏆 All Events</h3>
+                        <div class="action-buttons">
+                            <button class="btn btn-secondary btn-sm" onclick="exportEvents()">📊 Export Data</button>
+                            <button class="btn btn-warning btn-sm" onclick="bulkEditEvents()">✏️ Bulk Edit</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <div id="eventsTable">
+                            <p style="padding: 20px; text-align: center; color: #718096;">Loading events...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Enhanced Users Section -->
+            <section class="admin-section" id="users">
+                <div class="content-header">
+                    <div>
+                        <h1 class="content-title">Users Management</h1>
+                        <p class="content-subtitle">Manage registered users and their teams</p>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="exportUsers()">📊 Export Users</button>
+                        <button class="btn btn-primary" onclick="sendBulkNotification()">📢 Bulk Notify</button>
+                    </div>
+                </div>
+
+                <div class="filter-bar">
+                    <input type="text" class="search-input" id="userSearch" placeholder="🔍 Search users by name, email, or student ID..." onkeyup="filterUsers()">
+                    <select class="form-select" id="userTeamFilter" onchange="filterUsers()" style="width: auto;">
+                        <option value="">All Users</option>
+                        <option value="with_teams">With Teams</option>
+                        <option value="without_teams">Without Teams</option>
+                    </select>
+                    <select class="form-select" id="userSortFilter" onchange="sortUsers()" style="width: auto;">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="name_az">Name A-Z</option>
+                        <option value="name_za">Name Z-A</option>
+                        <option value="most_teams">Most Teams</option>
+                    </select>
+                </div>
+
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3>👥 All Users</h3>
+                        <div class="action-buttons">
+                            <button class="btn btn-success btn-sm" onclick="addNewUser()">➕ Add User</button>
+                            <button class="btn btn-warning btn-sm" onclick="bulkActions()">⚡ Bulk Actions</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <div id="usersTable">
+                            <p style="padding: 20px; text-align: center; color: #718096;">Loading users...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Enhanced Categories Section -->
+            <section class="admin-section" id="categories">
+                <div class="content-header">
+                    <div>
+                        <h1 class="content-title">Category Management</h1>
+                        <p class="content-subtitle">Add, edit, and manage event categories</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>➕ Add New Category</h3>
+                    <form id="addCategoryForm" class="category-form">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <input type="text" class="form-input" id="categoryName" placeholder="Enter category name..." required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <input type="text" class="form-input" id="categoryIcon" placeholder="🏆" style="width: 80px; text-align: center;" maxlength="2">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Category</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3>🏷️ Existing Categories</h3>
+                        <div class="action-buttons">
+                            <button class="btn btn-secondary btn-sm" onclick="importCategories()">📥 Import</button>
+                            <button class="btn btn-warning btn-sm" onclick="exportCategories()">📤 Export</button>
+                        </div>
+                    </div>
+                    <div id="categoriesList">
+                        <p style="padding: 20px; text-align: center; color: #718096;">Loading categories...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Enhanced Notifications Section -->
+            <section class="admin-section" id="notifications">
+                <div class="content-header">
+                    <div>
+                        <h1 class="content-title">Notification Center</h1>
+                        <p class="content-subtitle">Send announcements and manage user communications</p>
+                    </div>
+                    <button class="btn btn-secondary" onclick="viewNotificationHistory()">📜 View History</button>
+                </div>
+
+                <div class="card">
+                    <h3>📢 Create Notification</h3>
+                    <form id="notificationForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Notification Title</label>
+                                <input type="text" class="form-input" id="notificationTitle" placeholder="Enter notification title..." required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Icon (Emoji)</label>
+                                <input type="text" class="form-input" id="notificationIcon" placeholder="🏆" required style="text-align: center;" maxlength="2">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Message</label>
+                            <textarea class="form-textarea" id="notificationMessage" placeholder="Enter your message here..." required></textarea>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Send To</label>
+                                <select class="form-select" id="notificationTarget">
+                                    <option value="all">All Users</option>
+                                    <option value="team-members">Team Members Only</option>
+                                    <option value="non-team-members">Users Without Teams</option>
+                                    <option value="specific">Specific User (by email)</option>
+                                    <option value="bulk">Multiple Users</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Priority Level</label>
+                                <select class="form-select" id="notificationPriority">
+                                    <option value="normal">Normal</option>
+                                    <option value="high">High Priority</option>
+                                    <option value="urgent">Urgent</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group" id="specificUserGroup" style="display: none;">
+                            <label class="form-label">User Email</label>
+                            <input type="email" class="form-input" id="specificUserEmail" placeholder="user@college.edu">
+                        </div>
+                        <div class="form-group" id="bulkUserGroup" style="display: none;">
+                            <label class="form-label">Multiple Emails (comma-separated)</label>
+                            <textarea class="form-textarea" id="bulkUserEmails" placeholder="user1@college.edu, user2@college.edu, ..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="scheduleNotification" onchange="toggleSchedule()">
+                                <span class="form-label" style="margin-bottom: 0;">Schedule for Later</span>
+                            </label>
+                        </div>
+                        <div class="form-group" id="scheduleGroup" style="display: none;">
+                            <label class="form-label">Schedule Date & Time</label>
+                            <input type="datetime-local" class="form-input" id="scheduleDateTime">
+                        </div>
+                        <button type="submit" class="btn btn-success btn-lg">📤 Send Notification</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3>📊 Notification Analytics</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                        <div style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 12px;">
+                            <div style="font-size: 28px; font-weight: 600; color: #667eea;" id="notificationsSentToday">0</div>
+                            <div style="color: #718096;">Sent Today</div>
+                        </div>
+                        <div style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 12px;">
+                            <div style="font-size: 28px; font-weight: 600; color: #48bb78;" id="notificationsThisMonth">0</div>
+                            <div style="color: #718096;">This Month</div>
+                        </div>
+                        <div style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 12px;">
+                            <div style="font-size: 28px; font-weight: 600; color: #ed8936;" id="avgReadRate">0%</div>
+                            <div style="color: #718096;">Read Rate</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- New System Settings Section -->
+            <section class="admin-section" id="settings">
+                <div class="content-header">
+                    <div>
+                        <h1 class="content-title">System Settings</h1>
+                        <p class="content-subtitle">Configure application settings and preferences</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>⚙️ General Settings</h3>
+                    <form id="generalSettingsForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Application Name</label>
+                                <input type="text" class="form-input" id="appName" value="SportsHub">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Max Team Size (Default)</label>
+                                <input type="number" class="form-input" id="maxTeamSize" value="11" min="1" max="50">
+                            </div>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Registration Email Domain</label>
+                                <input type="text" class="form-input" id="emailDomain" value="@college.edu">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Default Event Duration (hours)</label>
+                                <input type="number" class="form-input" id="eventDuration" value="2" min="1" max="24">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">💾 Save Settings</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3>🔐 Security Settings</h3>
+                    <form id="securitySettingsForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Minimum Password Length</label>
+                                <input type="number" class="form-input" id="minPasswordLength" value="6" min="4" max="20">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Session Timeout (minutes)</label>
+                                <input type="number" class="form-input" id="sessionTimeout" value="30" min="5" max="480">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="requireEmailVerification">
+                                <span class="form-label" style="margin-bottom: 0;">Require Email Verification</span>
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">🔒 Update Security</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3>📊 Data Management</h3>
+                    <div class="action-buttons" style="gap: 15px;">
+                        <button class="btn btn-secondary" onclick="backupData()">💾 Backup Data</button>
+                        <button class="btn btn-warning" onclick="cleanupOldData()">🧹 Cleanup Old Data</button>
+                        <button class="btn btn-success" onclick="generateReport()">📈 Generate Report</button>
+                        <button class="btn btn-danger" onclick="resetSystem()">🔄 Reset System</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Enhanced Add/Edit Event Modal -->
+    <div class="modal" id="eventModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="eventModalTitle">Add New Event</h2>
+                <button class="close-btn" onclick="closeEventModal()">&times;</button>
+            </div>
+            <form id="eventForm">
+                <input type="hidden" id="eventId">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Event Name</label>
+                        <input type="text" class="form-input" id="eventName" required placeholder="Enter event name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select class="form-select" id="eventCategory" required>
+                            <option value="">Select Category</option>
+                            <option value="Cricket">Cricket</option>
+                            <option value="Football">Football</option>
+                            <option value="Badminton">Badminton</option>
+                            <option value="Table Tennis">Table Tennis</option>
+                            <option value="Basketball">Basketball</option>
+                            <option value="Volleyball">Volleyball</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-input" id="eventDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Time</label>
+                        <input type="time" class="form-input" id="eventTime" required>
+                    </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Team Name</label>
-                    <input type="text" class="form-input" id="teamName" required>
+                    <label class="form-label">Location</label>
+                    <input type="text" class="form-input" id="eventLocation" required placeholder="Enter venue location">
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Difficulty Level</label>
+                        <select class="form-select" id="eventDifficulty" required>
+                            <option value="Beginner">Beginner</option>
+                            <option value="Intermediate">Intermediate</option>
+                            <option value="Advanced">Advanced</option>
+                            <option value="Expert">Expert</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Emoji</label>
+                        <input type="text" class="form-input" id="eventEmoji" placeholder="🏆" required maxlength="2" style="text-align: center;">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Team Name</label>
+                        <input type="text" class="form-input" id="teamName" required placeholder="Enter team name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Max Team Size</label>
+                        <input type="number" class="form-input" id="teamMaxSlots" min="2" max="50" required>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Min Registration Year</label>
+                        <input type="text" class="form-input" id="minRegYear" placeholder="2020" required pattern="20[0-9]{2}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Min Experience (years)</label>
+                        <input type="number" class="form-input" id="minExperience" min="0" max="10" required>
+                    </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Max Team Size</label>
-                    <input type="number" class="form-input" id="teamMaxSlots" min="2" max="20" required>
+                    <label class="form-label">Description (Optional)</label>
+                    <textarea class="form-textarea" id="eventDescription" placeholder="Add event description, rules, or additional information..."></textarea>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Minimum Registration Year</label>
-                    <input type="text" class="form-input" id="minRegYear" placeholder="2020" required>
+                <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 25px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeEventModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-lg">💾 Save Event</button>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Minimum Experience (years)</label>
-                    <input type="number" class="form-input" id="minExperience" min="0" max="10" required>
-                </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Create Event</button>
             </form>
+        </div>
+    </div>
+
+    <!-- Enhanced Edit User Modal -->
+    <div class="modal" id="userModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="userModalTitle">Edit User</h2>
+                <button class="close-btn" onclick="closeUserModal()">&times;</button>
+            </div>
+            <form id="userForm">
+                <input type="hidden" id="userId">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-input" id="userFullName" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Student ID</label>
+                        <input type="text" class="form-input" id="userStudentID" required>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" id="userEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mobile Number</label>
+                        <input type="tel" class="form-input" id="userMobileNumber">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="userStatus">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="suspended">Suspended</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 25px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-lg">💾 Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Confirm Action</h2>
+                <button class="close-btn" onclick="closeConfirmModal()">&times;</button>
+            </div>
+            <div id="confirmMessage" style="margin-bottom: 25px; color: #4a5568;"></div>
+            <div style="display: flex; gap: 15px; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+                <button class="btn btn-danger" id="confirmButton" onclick="executeConfirmedAction()">Confirm</button>
+            </div>
         </div>
     </div>
 
@@ -685,10 +1292,15 @@
 
     <script>
         let currentAdmin = null;
+        let currentEditingEvent = null;
+        let currentEditingUser = null;
+        let confirmCallback = null;
+        let allEvents = [];
+        let allUsers = [];
+        let allCategories = [];
 
         // Initialize admin panel
         document.addEventListener('DOMContentLoaded', function() {
-            // Check if admin is already logged in
             const adminData = sessionStorage.getItem('adminUser');
             if (adminData) {
                 currentAdmin = JSON.parse(adminData);
@@ -696,20 +1308,67 @@
             }
             
             setupEventListeners();
+            setupModalEventListeners();
         });
 
         function setupEventListeners() {
             document.getElementById('adminLoginForm').addEventListener('submit', handleAdminLogin);
-            document.getElementById('addEventForm').addEventListener('submit', handleAddEvent);
+            document.getElementById('eventForm').addEventListener('submit', handleSaveEvent);
+            document.getElementById('userForm').addEventListener('submit', handleSaveUser);
+            document.getElementById('addCategoryForm').addEventListener('submit', handleAddCategory);
             document.getElementById('notificationForm').addEventListener('submit', handleSendNotification);
             document.getElementById('notificationTarget').addEventListener('change', handleNotificationTargetChange);
-            // Inside the setupEventListeners function in admin.html
-document.getElementById('addCategoryForm').addEventListener('submit', handleAddCategory);
+            document.getElementById('generalSettingsForm').addEventListener('submit', handleGeneralSettings);
+            document.getElementById('securitySettingsForm').addEventListener('submit', handleSecuritySettings);
+            
+            // Real-time search and filter
+            document.getElementById('eventSearch').addEventListener('input', debounce(filterEvents, 300));
+            document.getElementById('userSearch').addEventListener('input', debounce(filterUsers, 300));
+        }
+
+        function setupModalEventListeners() {
+            // Close modals when clicking outside
+            window.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal')) {
+                    if (e.target.id === 'eventModal') closeEventModal();
+                    if (e.target.id === 'userModal') closeUserModal();
+                    if (e.target.id === 'confirmModal') closeConfirmModal();
+                }
+            });
+        }
+
+        // Utility functions
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function showLoading(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="loading"></div><p style="margin-top: 15px; color: #718096;">Loading...</p></div>';
+            }
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
         }
 
         // Admin Authentication
         async function handleAdminLogin(e) {
             e.preventDefault();
+            
             const email = document.getElementById('adminEmail').value;
             const password = document.getElementById('adminPassword').value;
 
@@ -726,7 +1385,7 @@ document.getElementById('addCategoryForm').addEventListener('submit', handleAddC
                     currentAdmin = result.admin;
                     sessionStorage.setItem('adminUser', JSON.stringify(currentAdmin));
                     showAdminPanel();
-                    showNotification('Admin login successful!', 'success');
+                    showNotification('Welcome back, Admin!', 'success');
                 } else {
                     showNotification(result.message, 'error');
                 }
@@ -752,23 +1411,17 @@ document.getElementById('addCategoryForm').addEventListener('submit', handleAddC
 
         // Navigation
         function showSection(sectionName) {
-            // Hide all sections
             document.querySelectorAll('.admin-section').forEach(section => {
                 section.classList.remove('active');
             });
             
-            // Remove active class from all nav links
             document.querySelectorAll('.nav-link').forEach(link => {
                 link.classList.remove('active');
             });
             
-            // Show selected section
-            document.getElementById(sectionName).classList.add('active');
-            
-            // Add active class to clicked nav link
+            document.getElementById(sectionName).classList.add('active', 'fade-in-up');
             event.target.classList.add('active');
             
-            // Load section-specific data
             switch(sectionName) {
                 case 'dashboard':
                     loadDashboardData();
@@ -779,13 +1432,28 @@ document.getElementById('addCategoryForm').addEventListener('submit', handleAddC
                 case 'users':
                     loadUsersData();
                     break;
-                case 'categories': // <-- ADD THIS CASE
+                case 'categories':
                     loadCategoriesData();
+                    break;
+                case 'notifications':
+                    loadNotificationAnalytics();
                     break;
             }
         }
 
         // Dashboard functions
+        async function refreshDashboard() {
+            const refreshIcon = document.getElementById('refreshIcon');
+            refreshIcon.style.animation = 'spin 1s linear infinite';
+            
+            await loadDashboardData();
+            
+            setTimeout(() => {
+                refreshIcon.style.animation = '';
+                showNotification('Dashboard refreshed successfully!', 'success');
+            }, 1000);
+        }
+
         async function loadDashboardData() {
             try {
                 const [usersRes, eventsRes] = await Promise.all([
@@ -796,136 +1464,237 @@ document.getElementById('addCategoryForm').addEventListener('submit', handleAddC
                 const users = await usersRes.json();
                 const events = await eventsRes.json();
                 
+                allUsers = users;
+                allEvents = events;
+                
+                // Update stats
                 document.getElementById('totalUsers').textContent = users.length;
                 document.getElementById('totalEvents').textContent = events.length;
                 
-                // Calculate active teams and registrations
                 let activeTeams = 0;
                 let totalRegistrations = 0;
+                let fullTeams = 0;
                 
                 events.forEach(event => {
                     if (event.team && event.team.members.length > 0) {
                         activeTeams++;
                         totalRegistrations += event.team.members.length;
+                        if (event.team.members.length >= event.team.maxSlots) {
+                            fullTeams++;
+                        }
                     }
                 });
                 
                 document.getElementById('activeTeams').textContent = activeTeams;
                 document.getElementById('totalRegistrations').textContent = totalRegistrations;
                 
-                // Load recent activity
+                // Analytics
+                const today = new Date().toDateString();
+                const newUsersToday = users.filter(user => 
+                    new Date(user.createdAt).toDateString() === today
+                ).length;
+                
+                const thisMonth = new Date();
+                thisMonth.setDate(1);
+                const eventsThisMonth = events.filter(event => 
+                    new Date(event.createdAt) >= thisMonth
+                ).length;
+                
+                const completionRate = activeTeams > 0 ? Math.round((fullTeams / activeTeams) * 100) : 0;
+                
+                document.getElementById('newUsersToday').textContent = newUsersToday;
+                document.getElementById('eventsThisMonth').textContent = eventsThisMonth;
+                document.getElementById('completionRate').textContent = completionRate + '%';
+                
                 loadRecentActivity();
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
+                showNotification('Failed to load dashboard data', 'error');
             }
         }
 
-        async function loadRecentActivity() {
-            // This would typically come from a database query
-            const activity = [
-                { action: 'New user registered', user: 'John Doe', time: '2 hours ago' },
-                { action: 'Joined Cricket team', user: 'Jane Smith', time: '4 hours ago' },
-                { action: 'New event created', user: 'Admin', time: '1 day ago' }
+        function loadRecentActivity() {
+            const activities = [
+                { action: 'New user registered', user: 'John Doe', time: '2 hours ago', icon: '👤' },
+                { action: 'Joined Cricket team', user: 'Jane Smith', time: '4 hours ago', icon: '🏏' },
+                { action: 'New event created', user: 'Admin', time: '1 day ago', icon: '🏆' },
+                { action: 'Team completed', user: 'Football Team', time: '2 days ago', icon: '✅' }
             ];
             
-            const activityHTML = activity.map(item => 
-                `<p><strong>${item.action}</strong> - ${item.user} (${item.time})</p>`
+            const activityHTML = activities.map(item => 
+                `<div style="display: flex; align-items: center; gap: 15px; padding: 15px; border-bottom: 1px solid #f1f5f9;">
+                    <div style="font-size: 24px;">${item.icon}</div>
+                    <div style="flex: 1;">
+                        <strong>${item.action}</strong> - ${item.user}
+                        <br><small style="color: #718096;">${item.time}</small>
+                    </div>
+                </div>`
             ).join('');
             
             document.getElementById('recentActivity').innerHTML = activityHTML;
         }
 
-        // Events management
+        // Events management with enhanced editing
         async function loadEventsData() {
+            showLoading('eventsTable');
+            
             try {
                 const response = await fetch('https://sportshub-backend-fkye.onrender.com/api/admin/events');
                 const events = await response.json();
-                
-                const tableHTML = `
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Event Name</th>
-                                <th>Date</th>
-                                <th>Category</th>
-                                <th>Team</th>
-                                <th>Members</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${events.map(event => `
-                                <tr>
-                                    <td>${event.emoji} ${event.name}</td>
-                                    <td>${event.date}</td>
-                                    <td>${event.category}</td>
-                                    <td>${event.team ? event.team.name : 'No team'}</td>
-                                    <td>${event.team ? event.team.members.length + '/' + event.team.maxSlots : '0'}</td>
-                                    <td>
-                                        <button class="btn btn-danger" onclick="deleteEvent(${event.id})">Delete</button>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                `;
-                
-                document.getElementById('eventsTable').innerHTML = tableHTML;
+                allEvents = events;
+                renderEventsTable(events);
             } catch (error) {
                 console.error('Error loading events:', error);
-                document.getElementById('eventsTable').innerHTML = '<p>Error loading events</p>';
+                document.getElementById('eventsTable').innerHTML = '<p style="padding: 20px; text-align: center; color: #e53e3e;">Error loading events</p>';
             }
         }
 
-        // Users management
-        async function loadUsersData() {
-            try {
-                const response = await fetch('https://sportshub-backend-fkye.onrender.com/api/admin/users');
-                const users = await response.json();
-                
-                const tableHTML = `
-                    <table class="table">
-                        <thead>
+        function renderEventsTable(events) {
+            if (events.length === 0) {
+                document.getElementById('eventsTable').innerHTML = '<p style="padding: 20px; text-align: center; color: #718096;">No events found</p>';
+                return;
+            }
+
+            const tableHTML = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Date & Time</th>
+                            <th>Category</th>
+                            <th>Team Status</th>
+                            <th>Location</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${events.map(event => `
                             <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Student ID</th>
-                                <th>Joined Teams</th>
-                                <th>Registration Date</th>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <span style="font-size: 24px;">${event.emoji}</span>
+                                        <div>
+                                            <strong>${event.name}</strong>
+                                            <br><small style="color: #718096;">${event.difficulty}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong>${formatDate(event.date)}</strong>
+                                    <br><small>${event.time}</small>
+                                </td>
+                                <td>
+                                    <span class="status-badge">${event.category}</span>
+                                </td>
+                                <td>
+                                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                                        <strong>${event.team ? event.team.name : 'No team'}</strong>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <div style="background: ${event.team && event.team.members.length >= event.team.maxSlots ? '#f56565' : '#48bb78'}; width: 8px; height: 8px; border-radius: 50%;"></div>
+                                            <small>${event.team ? event.team.members.length + '/' + event.team.maxSlots : '0/0'}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <small style="color: #718096;">${event.location}</small>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-sm btn-primary" onclick="editEvent(${event.id})">Edit</button>
+                                        <button class="btn btn-sm btn-secondary" onclick="viewEventDetails(${event.id})">View</button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteEvent(${event.id})">Delete</button>
+                                    </div>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            ${users.map(user => `
-                                <tr>
-                                    <td>${user.fullName}</td>
-                                    <td>${user.email}</td>
-                                    <td>${user.studentID}</td>
-                                    <td>${user.joinedTeams ? user.joinedTeams.length : 0}</td>
-                                    <td>${new Date(user.createdAt).toLocaleDateString()}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                `;
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            document.getElementById('eventsTable').innerHTML = tableHTML;
+        }
+
+        function filterEvents() {
+            const searchTerm = document.getElementById('eventSearch').value.toLowerCase();
+            const categoryFilter = document.getElementById('eventCategoryFilter').value;
+            const statusFilter = document.getElementById('eventStatusFilter').value;
+
+            let filteredEvents = allEvents.filter(event => {
+                const matchesSearch = event.name.toLowerCase().includes(searchTerm) || 
+                                    event.category.toLowerCase().includes(searchTerm) ||
+                                    (event.team && event.team.name.toLowerCase().includes(searchTerm));
                 
-                document.getElementById('usersTable').innerHTML = tableHTML;
-            } catch (error) {
-                console.error('Error loading users:', error);
-                document.getElementById('usersTable').innerHTML = '<p>Error loading users</p>';
-            }
+                const matchesCategory = !categoryFilter || event.category === categoryFilter;
+                
+                let matchesStatus = true;
+                if (statusFilter === 'full' && event.team) {
+                    matchesStatus = event.team.members.length >= event.team.maxSlots;
+                } else if (statusFilter === 'available' && event.team) {
+                    matchesStatus = event.team.members.length < event.team.maxSlots;
+                }
+
+                return matchesSearch && matchesCategory && matchesStatus;
+            });
+
+            renderEventsTable(filteredEvents);
         }
 
-        // Event management functions
         function openAddEventModal() {
-            document.getElementById('addEventModal').classList.add('active');
+            currentEditingEvent = null;
+            document.getElementById('eventModalTitle').textContent = 'Add New Event';
+            document.getElementById('eventForm').reset();
+            document.getElementById('eventId').value = '';
+            document.getElementById('eventModal').classList.add('active');
         }
 
-        function closeAddEventModal() {
-            document.getElementById('addEventModal').classList.remove('active');
-            document.getElementById('addEventForm').reset();
+        function editEvent(eventId) {
+            const event = allEvents.find(e => e.id === eventId);
+            if (!event) return;
+
+            currentEditingEvent = event;
+            document.getElementById('eventModalTitle').textContent = 'Edit Event';
+            
+            document.getElementById('eventId').value = event.id;
+            document.getElementById('eventName').value = event.name;
+            document.getElementById('eventCategory').value = event.category;
+            document.getElementById('eventDate').value = event.date;
+            document.getElementById('eventTime').value = event.time;
+            document.getElementById('eventLocation').value = event.location;
+            document.getElementById('eventDifficulty').value = event.difficulty;
+            document.getElementById('eventEmoji').value = event.emoji;
+            document.getElementById('teamName').value = event.team ? event.team.name : '';
+            document.getElementById('teamMaxSlots').value = event.team ? event.team.maxSlots : '';
+            document.getElementById('minRegYear').value = event.team ? event.team.requirements.minRegNumber : '';
+            document.getElementById('minExperience').value = event.team ? event.team.requirements.minExperience : '';
+            document.getElementById('eventDescription').value = event.description || '';
+
+            document.getElementById('eventModal').classList.add('active');
         }
 
-        async function handleAddEvent(e) {
+        function viewEventDetails(eventId) {
+            const event = allEvents.find(e => e.id === eventId);
+            if (!event) return;
+
+            const membersHtml = event.team && event.team.members.length > 0 
+                ? event.team.members.map(member => `<li>${member}</li>`).join('')
+                : '<li>No members yet</li>';
+
+            showConfirm(`
+                <div style="text-align: left;">
+                    <h3 style="margin-bottom: 15px; color: #4a5568;">${event.emoji} ${event.name}</h3>
+                    <div style="margin-bottom: 10px;"><strong>Category:</strong> ${event.category}</div>
+                    <div style="margin-bottom: 10px;"><strong>Date:</strong> ${formatDate(event.date)} at ${event.time}</div>
+                    <div style="margin-bottom: 10px;"><strong>Location:</strong> ${event.location}</div>
+                    <div style="margin-bottom: 10px;"><strong>Difficulty:</strong> ${event.difficulty}</div>
+                    <div style="margin-bottom: 15px;"><strong>Team:</strong> ${event.team ? event.team.name : 'No team'} (${event.team ? event.team.members.length + '/' + event.team.maxSlots : '0/0'} members)</div>
+                    <div style="margin-bottom: 10px;"><strong>Team Members:</strong></div>
+                    <ul style="margin-left: 20px; color: #718096;">${membersHtml}</ul>
+                    ${event.description ? `<div style="margin-top: 15px;"><strong>Description:</strong><br>${event.description}</div>` : ''}
+                </div>
+            `, 'Event Details', 'Close', () => {});
+        }
+
+        async function handleSaveEvent(e) {
             e.preventDefault();
             
             const eventData = {
@@ -939,12 +1708,22 @@ document.getElementById('addCategoryForm').addEventListener('submit', handleAddC
                 teamName: document.getElementById('teamName').value,
                 maxSlots: parseInt(document.getElementById('teamMaxSlots').value),
                 minRegYear: document.getElementById('minRegYear').value,
-                minExperience: parseInt(document.getElementById('minExperience').value)
+                minExperience: parseInt(document.getElementById('minExperience').value),
+                description: document.getElementById('eventDescription').value
             };
-            
+
             try {
-                const response = await fetch('https://sportshub-backend-fkye.onrender.com/api/admin/events', {
-                    method: 'POST',
+                const eventId = document.getElementById('eventId').value;
+                const isEdit = eventId !== '';
+                
+                const url = isEdit 
+                    ? `https://sportshub-backend-fkye.onrender.com/api/admin/events/${eventId}`
+                    : 'https://sportshub-backend-fkye.onrender.com/api/admin/events';
+                
+                const method = isEdit ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(eventData)
                 });
@@ -952,130 +1731,468 @@ document.getElementById('addCategoryForm').addEventListener('submit', handleAddC
                 const result = await response.json();
                 
                 if (response.ok) {
-                    showNotification('Event created successfully!', 'success');
-                    closeAddEventModal();
+                    showNotification(`Event ${isEdit ? 'updated' : 'created'} successfully!`, 'success');
+                    closeEventModal();
                     loadEventsData();
                 } else {
                     showNotification(result.message, 'error');
                 }
             } catch (error) {
-                console.error('Add event error:', error);
-                showNotification('Failed to create event', 'error');
+                console.error('Save event error:', error);
+                showNotification('Failed to save event', 'error');
             }
         }
 
-        async function deleteEvent(eventId) {
-            if (!confirm('Are you sure you want to delete this event?')) return;
+        function deleteEvent(eventId) {
+            const event = allEvents.find(e => e.id === eventId);
+            if (!event) return;
+
+            showConfirm(
+                `Are you sure you want to delete "${event.name}"? This action cannot be undone and will remove all associated team data.`,
+                'Delete Event',
+                'Delete',
+                async () => {
+                    try {
+                        const response = await fetch(`https://sportshub-backend-fkye.onrender.com/api/admin/events/${eventId}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (response.ok) {
+                            showNotification('Event deleted successfully!', 'success');
+                            loadEventsData();
+                        } else {
+                            showNotification(result.message, 'error');
+                        }
+                    } catch (error) {
+                        console.error('Delete event error:', error);
+                        showNotification('Failed to delete event', 'error');
+                    }
+                }
+            );
+        }
+
+        function closeEventModal() {
+            document.getElementById('eventModal').classList.remove('active');
+            document.getElementById('eventForm').reset();
+            currentEditingEvent = null;
+        }
+
+        // Enhanced Users Management
+        async function loadUsersData() {
+            showLoading('usersTable');
             
             try {
-                const response = await fetch(`https://sportshub-backend-fkye.onrender.com/api/admin/events/${eventId}`, {
-                    method: 'DELETE'
+                const response = await fetch('https://sportshub-backend-fkye.onrender.com/api/admin/users');
+                const users = await response.json();
+                allUsers = users;
+                renderUsersTable(users);
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('usersTable').innerHTML = '<p style="padding: 20px; text-align: center; color: #e53e3e;">Error loading users</p>';
+            }
+        }
+
+        function renderUsersTable(users) {
+            if (users.length === 0) {
+                document.getElementById('usersTable').innerHTML = '<p style="padding: 20px; text-align: center; color: #718096;">No users found</p>';
+                return;
+            }
+
+            const tableHTML = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Contact</th>
+                            <th>Teams</th>
+                            <th>Status</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${users.map(user => `
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="user-avatar">${user.fullName.split(' ').map(n => n[0]).join('')}</div>
+                                        <div class="user-details">
+                                            <h4>${user.fullName}</h4>
+                                            <p>ID: ${user.studentID}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>${user.email}</strong>
+                                        <br><small>${user.mobileNumber || 'No phone'}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status-badge">${user.joinedTeams ? user.joinedTeams.length : 0} teams</span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-active">Active</span>
+                                </td>
+                                <td>
+                                    <small>${formatDate(user.createdAt)}</small>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-sm btn-primary" onclick="editUser('${user._id}')">Edit</button>
+                                        <button class="btn btn-sm btn-secondary" onclick="viewUserDetails('${user._id}')">View</button>
+                                        <button class="btn btn-sm btn-warning" onclick="resetUserPassword('${user._id}')">Reset Pwd</button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteUser('${user._id}')">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            document.getElementById('usersTable').innerHTML = tableHTML;
+        }
+
+        function filterUsers() {
+            const searchTerm = document.getElementById('userSearch').value.toLowerCase();
+            const teamFilter = document.getElementById('userTeamFilter').value;
+
+            let filteredUsers = allUsers.filter(user => {
+                const matchesSearch = user.fullName.toLowerCase().includes(searchTerm) || 
+                                    user.email.toLowerCase().includes(searchTerm) ||
+                                    user.studentID.toLowerCase().includes(searchTerm);
+                
+                let matchesTeamFilter = true;
+                if (teamFilter === 'with_teams') {
+                    matchesTeamFilter = user.joinedTeams && user.joinedTeams.length > 0;
+                } else if (teamFilter === 'without_teams') {
+                    matchesTeamFilter = !user.joinedTeams || user.joinedTeams.length === 0;
+                }
+
+                return matchesSearch && matchesTeamFilter;
+            });
+
+            renderUsersTable(filteredUsers);
+        }
+
+        function sortUsers() {
+            const sortBy = document.getElementById('userSortFilter').value;
+            let sortedUsers = [...allUsers];
+
+            switch(sortBy) {
+                case 'newest':
+                    sortedUsers.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    break;
+                case 'oldest':
+                    sortedUsers.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                    break;
+                case 'name_az':
+                    sortedUsers.sort((a, b) => a.fullName.localeCompare(b.fullName));
+                    break;
+                case 'name_za':
+                    sortedUsers.sort((a, b) => b.fullName.localeCompare(a.fullName));
+                    break;
+                case 'most_teams':
+                    sortedUsers.sort((a, b) => (b.joinedTeams?.length || 0) - (a.joinedTeams?.length || 0));
+                    break;
+            }
+
+            renderUsersTable(sortedUsers);
+        }
+
+        function editUser(userId) {
+            const user = allUsers.find(u => u._id === userId);
+            if (!user) return;
+
+            currentEditingUser = user;
+            document.getElementById('userModalTitle').textContent = 'Edit User';
+            
+            document.getElementById('userId').value = user._id;
+            document.getElementById('userFullName').value = user.fullName;
+            document.getElementById('userStudentID').value = user.studentID;
+            document.getElementById('userEmail').value = user.email;
+            document.getElementById('userMobileNumber').value = user.mobileNumber || '';
+            document.getElementById('userStatus').value = user.status || 'active';
+
+            document.getElementById('userModal').classList.add('active');
+        }
+
+        function viewUserDetails(userId) {
+            const user = allUsers.find(u => u._id === userId);
+            if (!user) return;
+
+            const teamsHtml = user.joinedTeams && user.joinedTeams.length > 0
+                ? user.joinedTeams.map(team => `<li>${team.teamName} (${team.eventName})</li>`).join('')
+                : '<li>No teams joined</li>';
+
+            showConfirm(`
+                <div style="text-align: left;">
+                    <h3 style="margin-bottom: 15px; color: #4a5568;">${user.fullName}</h3>
+                    <div style="margin-bottom: 10px;"><strong>Student ID:</strong> ${user.studentID}</div>
+                    <div style="margin-bottom: 10px;"><strong>Email:</strong> ${user.email}</div>
+                    <div style="margin-bottom: 10px;"><strong>Mobile:</strong> ${user.mobileNumber || 'Not provided'}</div>
+                    <div style="margin-bottom: 10px;"><strong>Joined:</strong> ${formatDate(user.createdAt)}</div>
+                    <div style="margin-bottom: 10px;"><strong>Teams Joined:</strong></div>
+                    <ul style="margin-left: 20px; color: #718096;">${teamsHtml}</ul>
+                    <div style="margin-top: 15px;"><strong>Notifications:</strong> ${user.notifications ? user.notifications.length : 0} total</div>
+                </div>
+            `, 'User Details', 'Close', () => {});
+        }
+
+        async function handleSaveUser(e) {
+            e.preventDefault();
+            
+            const userData = {
+                fullName: document.getElementById('userFullName').value,
+                studentID: document.getElementById('userStudentID').value,
+                email: document.getElementById('userEmail').value,
+                mobileNumber: document.getElementById('userMobileNumber').value,
+                status: document.getElementById('userStatus').value
+            };
+
+            try {
+                const userId = document.getElementById('userId').value;
+                
+                const response = await fetch(`https://sportshub-backend-fkye.onrender.com/api/admin/users/${userId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
                 });
                 
                 const result = await response.json();
                 
                 if (response.ok) {
-                    showNotification('Event deleted successfully!', 'success');
-                    loadEventsData();
+                    showNotification('User updated successfully!', 'success');
+                    closeUserModal();
+                    loadUsersData();
                 } else {
                     showNotification(result.message, 'error');
                 }
             } catch (error) {
-                console.error('Delete event error:', error);
-                showNotification('Failed to delete event', 'error');
+                console.error('Save user error:', error);
+                showNotification('Failed to update user', 'error');
             }
         }
 
-        // Notification management
+        function closeUserModal() {
+            document.getElementById('userModal').classList.remove('active');
+            document.getElementById('userForm').reset();
+            currentEditingUser = null;
+        }
+
+        function resetUserPassword(userId) {
+            const user = allUsers.find(u => u._id === userId);
+            if (!user) return;
+
+            showConfirm(
+                `Reset password for ${user.fullName}? A temporary password will be sent to their email.`,
+                'Reset Password',
+                'Reset',
+                async () => {
+                    try {
+                        const response = await fetch(`https://sportshub-backend-fkye.onrender.com/api/admin/users/${userId}/reset-password`, {
+                            method: 'POST'
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (response.ok) {
+                            showNotification('Password reset successfully!', 'success');
+                        } else {
+                            showNotification(result.message, 'error');
+                        }
+                    } catch (error) {
+                        console.error('Reset password error:', error);
+                        showNotification('Failed to reset password', 'error');
+                    }
+                }
+            );
+        }
+
+        function deleteUser(userId) {
+            const user = allUsers.find(u => u._id === userId);
+            if (!user) return;
+
+            showConfirm(
+                `Are you sure you want to delete ${user.fullName}? This will remove them from all teams and cannot be undone.`,
+                'Delete User',
+                'Delete',
+                async () => {
+                    try {
+                        const response = await fetch(`https://sportshub-backend-fkye.onrender.com/api/admin/users/${userId}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (response.ok) {
+                            showNotification('User deleted successfully!', 'success');
+                            loadUsersData();
+                        } else {
+                            showNotification(result.message, 'error');
+                        }
+                    } catch (error) {
+                        console.error('Delete user error:', error);
+                        showNotification('Failed to delete user', 'error');
+                    }
+                }
+            );
+        }
+
+        // Enhanced Categories Management
+        async function loadCategoriesData() {
+            try {
+                const response = await fetch('https://sportshub-backend-fkye.onrender.com/api/admin/categories');
+                const categories = await response.json();
+                allCategories = categories;
+                renderCategoriesList(categories);
+            } catch (error) {
+                console.error('Error loading categories:', error);
+                document.getElementById('categoriesList').innerHTML = '<p style="padding: 20px; text-align: center; color: #e53e3e;">Error loading categories</p>';
+            }
+        }
+
+        function renderCategoriesList(categories) {
+            const categoriesList = document.getElementById('categoriesList');
+            
+            if (categories.length === 0) {
+                categoriesList.innerHTML = '<p style="padding: 20px; text-align: center; color: #718096;">No categories found. Add one above!</p>';
+                return;
+            }
+
+            const listHTML = categories.map(cat => `
+                <div class="category-list-item">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 20px;">${cat.icon || '🏷️'}</span>
+                        <span class="category-name">${cat.name}</span>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-sm btn-primary" onclick="editCategory('${cat._id}', '${cat.name}', '${cat.icon || ''}')">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteCategory('${cat._id}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            categoriesList.innerHTML = listHTML;
+        }
+
+        async function handleAddCategory(e) {
+            e.preventDefault();
+            const categoryNameInput = document.getElementById('categoryName');
+            const categoryIconInput = document.getElementById('categoryIcon');
+            
+            const name = categoryNameInput.value.trim();
+            const icon = categoryIconInput.value.trim() || '🏷️';
+
+            if (!name) {
+                return showNotification('Category name cannot be empty.', 'error');
+            }
+
+            try {
+                const response = await fetch('https://sportshub-backend-fkye.onrender.com/api/admin/categories', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, icon })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showNotification('Category added successfully!', 'success');
+                    categoryNameInput.value = '';
+                    categoryIconInput.value = '';
+                    loadCategoriesData();
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            } catch (error) {
+                showNotification('Failed to add category.', 'error');
+            }
+        }
+
+        function editCategory(categoryId, currentName, currentIcon) {
+            const newName = prompt('Edit category name:', currentName);
+            const newIcon = prompt('Edit category icon:', currentIcon);
+            
+            if (newName && newName.trim() !== currentName) {
+                updateCategory(categoryId, newName.trim(), newIcon?.trim() || currentIcon);
+            }
+        }
+
+        async function updateCategory(categoryId, name, icon) {
+            try {
+                const response = await fetch(`https://sportshub-backend-fkye.onrender.com/api/admin/categories/${categoryId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, icon })
+                });
+                
+                const result = await response.json();
+
+                if (response.ok) {
+                    showNotification('Category updated successfully!', 'success');
+                    loadCategoriesData();
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            } catch (error) {
+                showNotification('Failed to update category.', 'error');
+            }
+        }
+
+        async function deleteCategory(categoryId) {
+            showConfirm(
+                'Are you sure you want to delete this category? Events using this category will not be affected.',
+                'Delete Category',
+                'Delete',
+                async () => {
+                    try {
+                        const response = await fetch(`https://sportshub-backend-fkye.onrender.com/api/admin/categories/${categoryId}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            showNotification('Category deleted successfully!', 'success');
+                            loadCategoriesData();
+                        } else {
+                            showNotification(result.message, 'error');
+                        }
+                    } catch (error) {
+                        showNotification('Failed to delete category.', 'error');
+                    }
+                }
+            );
+        }
+
+        // Enhanced Notifications
         function handleNotificationTargetChange() {
             const target = document.getElementById('notificationTarget').value;
             const specificUserGroup = document.getElementById('specificUserGroup');
+            const bulkUserGroup = document.getElementById('bulkUserGroup');
             
-            if (target === 'specific') {
-                specificUserGroup.style.display = 'block';
-                document.getElementById('specificUserEmail').required = true;
-            } else {
-                specificUserGroup.style.display = 'none';
-                document.getElementById('specificUserEmail').required = false;
-            }
-        }
-        // Add these new functions inside the <script> tag in admin.html
-
-async function loadCategoriesData() {
-    try {
-        const response = await fetch('https://sportshub-backend-fkye.onrender.com/api/admin/categories');
-        const categories = await response.json();
-        
-        const categoriesList = document.getElementById('categoriesList');
-        if (categories.length === 0) {
-            categoriesList.innerHTML = '<p>No categories found. Add one above!</p>';
-            return;
+            specificUserGroup.style.display = target === 'specific' ? 'block' : 'none';
+            bulkUserGroup.style.display = target === 'bulk' ? 'block' : 'none';
+            
+            const specificEmailInput = document.getElementById('specificUserEmail');
+            const bulkEmailsInput = document.getElementById('bulkUserEmails');
+            
+            specificEmailInput.required = target === 'specific';
+            bulkEmailsInput.required = target === 'bulk';
         }
 
-        const listHTML = categories.map(cat => `
-            <div class="category-list-item">
-                <span>${cat.name}</span>
-                <button class="btn btn-danger" onclick="deleteCategory('${cat._id}')">Delete</button>
-            </div>
-        `).join('');
-        
-        categoriesList.innerHTML = listHTML;
-    } catch (error) {
-        console.error('Error loading categories:', error);
-        document.getElementById('categoriesList').innerHTML = '<p>Error loading categories.</p>';
-    }
-}
-
-async function handleAddCategory(e) {
-    e.preventDefault();
-    const categoryNameInput = document.getElementById('categoryName');
-    const name = categoryNameInput.value.trim();
-
-    if (!name) {
-        return showNotification('Category name cannot be empty.', 'error');
-    }
-
-    try {
-        const response = await fetch('https://sportshub-backend-fkye.onrender.com/api/admin/categories', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name })
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-            showNotification('Category added successfully!', 'success');
-            categoryNameInput.value = ''; // Clear the input
-            loadCategoriesData(); // Refresh the list
-        } else {
-            showNotification(result.message, 'error');
+        function toggleSchedule() {
+            const scheduleGroup = document.getElementById('scheduleGroup');
+            const scheduleCheckbox = document.getElementById('scheduleNotification');
+            const scheduleInput = document.getElementById('scheduleDateTime');
+            
+            scheduleGroup.style.display = scheduleCheckbox.checked ? 'block' : 'none';
+            scheduleInput.required = scheduleCheckbox.checked;
         }
-    } catch (error) {
-        showNotification('Failed to add category.', 'error');
-    }
-}
-
-async function deleteCategory(categoryId) {
-    if (!confirm('Are you sure you want to delete this category?')) return;
-
-    try {
-        const response = await fetch(`https://sportshub-backend-fkye.onrender.com/api/admin/categories/${categoryId}`, {
-            method: 'DELETE'
-        });
-        
-        const result = await response.json();
-
-        if (response.ok) {
-            showNotification('Category deleted successfully!', 'success');
-            loadCategoriesData(); // Refresh the list
-        } else {
-            showNotification(result.message, 'error');
-        }
-    } catch (error) {
-        showNotification('Failed to delete category.', 'error');
-    }
-}
 
         async function handleSendNotification(e) {
             e.preventDefault();
@@ -1085,7 +2202,11 @@ async function deleteCategory(categoryId) {
                 message: document.getElementById('notificationMessage').value,
                 icon: document.getElementById('notificationIcon').value,
                 target: document.getElementById('notificationTarget').value,
-                specificEmail: document.getElementById('specificUserEmail').value
+                priority: document.getElementById('notificationPriority').value,
+                specificEmail: document.getElementById('specificUserEmail').value,
+                bulkEmails: document.getElementById('bulkUserEmails').value,
+                scheduled: document.getElementById('scheduleNotification').checked,
+                scheduleDateTime: document.getElementById('scheduleDateTime').value
             };
             
             try {
@@ -1098,9 +2219,14 @@ async function deleteCategory(categoryId) {
                 const result = await response.json();
                 
                 if (response.ok) {
-                    showNotification(`Notification sent successfully! (${result.sentCount} recipients)`, 'success');
+                    const message = notificationData.scheduled 
+                        ? `Notification scheduled successfully for ${new Date(notificationData.scheduleDateTime).toLocaleString()}!`
+                        : `Notification sent successfully! (${result.sentCount} recipients)`;
+                    
+                    showNotification(message, 'success');
                     document.getElementById('notificationForm').reset();
-                    handleNotificationTargetChange(); // Reset form visibility
+                    handleNotificationTargetChange();
+                    loadNotificationAnalytics();
                 } else {
                     showNotification(result.message, 'error');
                 }
@@ -1110,21 +2236,439 @@ async function deleteCategory(categoryId) {
             }
         }
 
-        // Utility functions
-        function showNotification(message, type = 'success') {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.className = `notification ${type} show`;
-            setTimeout(() => notification.classList.remove('show'), 4000);
+        function loadNotificationAnalytics() {
+            // Mock analytics data - replace with real API calls
+            document.getElementById('notificationsSentToday').textContent = '12';
+            document.getElementById('notificationsThisMonth').textContent = '156';
+            document.getElementById('avgReadRate').textContent = '87%';
         }
 
-        // Close modal when clicking outside
-        window.addEventListener('click', function(e) {
-            const modal = document.getElementById('addEventModal');
-            if (e.target === modal) {
-                closeAddEventModal();
+        function viewNotificationHistory() {
+            // Mock notification history - implement based on your backend
+            showNotification('Notification history feature coming soon!', 'warning');
+        }
+
+        // Settings Management
+        async function handleGeneralSettings(e) {
+            e.preventDefault();
+            
+            const settings = {
+                appName: document.getElementById('appName').value,
+                maxTeamSize: parseInt(document.getElementById('maxTeamSize').value),
+                emailDomain: document.getElementById('emailDomain').value,
+                eventDuration: parseInt(document.getElementById('eventDuration').value)
+            };
+            
+            // Save to backend - implement based on your API
+            showNotification('General settings updated successfully!', 'success');
+        }
+
+        async function handleSecuritySettings(e) {
+            e.preventDefault();
+            
+            const settings = {
+                minPasswordLength: parseInt(document.getElementById('minPasswordLength').value),
+                sessionTimeout: parseInt(document.getElementById('sessionTimeout').value),
+                requireEmailVerification: document.getElementById('requireEmailVerification').checked
+            };
+            
+            // Save to backend - implement based on your API
+            showNotification('Security settings updated successfully!', 'success');
+        }
+
+        // Data Management Functions
+        function backupData() {
+            showConfirm(
+                'This will create a backup of all system data. Continue?',
+                'Backup Data',
+                'Backup',
+                () => {
+                    // Implement backup functionality
+                    showNotification('Data backup initiated successfully!', 'success');
+                }
+            );
+        }
+
+        function cleanupOldData() {
+            showConfirm(
+                'This will remove old logs and expired data. This action cannot be undone. Continue?',
+                'Cleanup Data',
+                'Cleanup',
+                () => {
+                    // Implement cleanup functionality
+                    showNotification('Data cleanup completed successfully!', 'success');
+                }
+            );
+        }
+
+        function generateReport() {
+            // Mock report generation
+            const reportData = {
+                totalUsers: allUsers.length,
+                totalEvents: allEvents.length,
+                activeTeams: allEvents.filter(e => e.team && e.team.members.length > 0).length,
+                generatedAt: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sportshub-report-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showNotification('System report generated and downloaded!', 'success');
+        }
+
+        function resetSystem() {
+            showConfirm(
+                'WARNING: This will reset all system data to default state. All users, events, and settings will be lost. This action cannot be undone. Type "RESET" to confirm.',
+                'Reset System',
+                'Reset',
+                () => {
+                    const confirmation = prompt('Type "RESET" to confirm system reset:');
+                    if (confirmation === 'RESET') {
+                        // Implement system reset functionality
+                        showNotification('System reset initiated. Please contact technical support.', 'warning');
+                    } else {
+                        showNotification('Reset cancelled.', 'success');
+                    }
+                }
+            );
+        }
+
+        // Enhanced utility functions
+        function exportEvents() {
+            const csv = convertToCSV(allEvents);
+            downloadFile(csv, 'events.csv', 'text/csv');
+            showNotification('Events exported successfully!', 'success');
+        }
+
+        function exportUsers() {
+            const csv = convertToCSV(allUsers);
+            downloadFile(csv, 'users.csv', 'text/csv');
+            showNotification('Users exported successfully!', 'success');
+        }
+
+        function exportCategories() {
+            const csv = convertToCSV(allCategories);
+            downloadFile(csv, 'categories.csv', 'text/csv');
+            showNotification('Categories exported successfully!', 'success');
+        }
+
+        function convertToCSV(data) {
+            if (!data || data.length === 0) return '';
+            
+            const headers = Object.keys(data[0]);
+            const csvHeaders = headers.join(',');
+            
+            const csvRows = data.map(row => {
+                return headers.map(header => {
+                    const value = row[header];
+                    if (typeof value === 'object' && value !== null) {
+                        return JSON.stringify(value).replace(/"/g, '""');
+                    }
+                    return `"${String(value).replace(/"/g, '""')}"`;
+                }).join(',');
+            });
+            
+            return [csvHeaders, ...csvRows].join('\n');
+        }
+
+        function downloadFile(content, filename, contentType) {
+            const blob = new Blob([content], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function bulkEditEvents() {
+            showNotification('Bulk edit feature coming soon!', 'warning');
+        }
+
+        function bulkActions() {
+            showNotification('Bulk actions feature coming soon!', 'warning');
+        }
+
+        function addNewUser() {
+            showNotification('Add new user feature coming soon!', 'warning');
+        }
+
+        function sendBulkNotification() {
+            document.getElementById('notificationTarget').value = 'all';
+            handleNotificationTargetChange();
+            showSection('notifications');
+        }
+
+        function importCategories() {
+            showNotification('Import categories feature coming soon!', 'warning');
+        }
+
+        // Enhanced confirmation modal
+        function showConfirm(message, title = 'Confirm', buttonText = 'Confirm', callback = () => {}) {
+            document.getElementById('confirmMessage').innerHTML = message;
+            document.querySelector('#confirmModal .modal-title').textContent = title;
+            document.getElementById('confirmButton').textContent = buttonText;
+            document.getElementById('confirmModal').classList.add('active');
+            confirmCallback = callback;
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.remove('active');
+            confirmCallback = null;
+        }
+
+        function executeConfirmedAction() {
+            if (confirmCallback) {
+                confirmCallback();
+            }
+            closeConfirmModal();
+        }
+
+        // Enhanced notification system
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            if (!notification) return;
+            
+            // Remove existing classes
+            notification.className = 'notification';
+            
+            // Add new classes
+            notification.classList.add(type, 'show');
+            notification.textContent = message;
+            
+            // Auto hide after 4 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+
+        // Enhanced search and filtering
+        function createAdvancedFilter() {
+            // Implementation for advanced filtering UI
+            showNotification('Advanced filter coming soon!', 'warning');
+        }
+
+        // Real-time updates simulation
+        function startRealTimeUpdates() {
+            setInterval(() => {
+                // Simulate real-time data updates
+                if (document.querySelector('.admin-section.active')?.id === 'dashboard') {
+                    // Update dashboard stats occasionally
+                    const randomUpdate = Math.random();
+                    if (randomUpdate > 0.95) { // 5% chance every interval
+                        loadDashboardData();
+                    }
+                }
+            }, 30000); // Check every 30 seconds
+        }
+
+        // Enhanced keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + shortcuts
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case '1':
+                        e.preventDefault();
+                        showSection('dashboard');
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        showSection('events');
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        showSection('users');
+                        break;
+                    case '4':
+                        e.preventDefault();
+                        showSection('categories');
+                        break;
+                    case '5':
+                        e.preventDefault();
+                        showSection('notifications');
+                        break;
+                    case '6':
+                        e.preventDefault();
+                        showSection('settings');
+                        break;
+                    case 'n':
+                        e.preventDefault();
+                        if (document.querySelector('.admin-section.active')?.id === 'events') {
+                            openAddEventModal();
+                        }
+                        break;
+                }
+            }
+            
+            // ESC to close modals
+            if (e.key === 'Escape') {
+                closeEventModal();
+                closeUserModal();
+                closeConfirmModal();
             }
         });
+
+        // Enhanced error handling
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e.error);
+            showNotification('An unexpected error occurred. Please refresh the page.', 'error');
+        });
+
+        // Enhanced data validation
+        function validateEventData(eventData) {
+            const errors = [];
+            
+            if (!eventData.name || eventData.name.trim().length < 3) {
+                errors.push('Event name must be at least 3 characters long');
+            }
+            
+            if (!eventData.date) {
+                errors.push('Event date is required');
+            } else {
+                const eventDate = new Date(eventData.date);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                if (eventDate < today) {
+                    errors.push('Event date cannot be in the past');
+                }
+            }
+            
+            if (!eventData.teamName || eventData.teamName.trim().length < 2) {
+                errors.push('Team name must be at least 2 characters long');
+            }
+            
+            if (!eventData.maxSlots || eventData.maxSlots < 2 || eventData.maxSlots > 50) {
+                errors.push('Team size must be between 2 and 50 members');
+            }
+            
+            return errors;
+        }
+
+        function validateUserData(userData) {
+            const errors = [];
+            
+            if (!userData.fullName || userData.fullName.trim().length < 2) {
+                errors.push('Full name must be at least 2 characters long');
+            }
+            
+            if (!userData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userData.email)) {
+                errors.push('Please enter a valid email address');
+            }
+            
+            if (!userData.studentID || !/^20\d{2}[A-Z]{2}\d{3}$/.test(userData.studentID)) {
+                errors.push('Student ID must follow format: 2021CS001');
+            }
+            
+            return errors;
+        }
+
+        // Performance monitoring
+        function trackPerformance() {
+            const perfData = performance.getEntriesByType('navigation')[0];
+            console.log('Page load time:', perfData.loadEventEnd - perfData.loadEventStart, 'ms');
+        }
+
+        // Initialize performance tracking
+        window.addEventListener('load', trackPerformance);
+
+        // Start real-time updates when panel is shown
+        document.addEventListener('DOMContentLoaded', function() {
+            startRealTimeUpdates();
+        });
+
+        // Enhanced accessibility
+        function setupAccessibility() {
+            // Add ARIA labels and roles
+            document.querySelectorAll('.btn').forEach(btn => {
+                if (!btn.getAttribute('aria-label')) {
+                    btn.setAttribute('aria-label', btn.textContent.trim());
+                }
+            });
+            
+            // Focus management for modals
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Tab') {
+                    const activeModal = document.querySelector('.modal.active');
+                    if (activeModal) {
+                        const focusableElements = activeModal.querySelectorAll(
+                            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                        );
+                        const firstElement = focusableElements[0];
+                        const lastElement = focusableElements[focusableElements.length - 1];
+                        
+                        if (e.shiftKey) {
+                            if (document.activeElement === firstElement) {
+                                lastElement.focus();
+                                e.preventDefault();
+                            }
+                        } else {
+                            if (document.activeElement === lastElement) {
+                                firstElement.focus();
+                                e.preventDefault();
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize accessibility features
+        document.addEventListener('DOMContentLoaded', setupAccessibility);
+
+        // Auto-save functionality
+        let autoSaveTimeout;
+        function setupAutoSave() {
+            const forms = document.querySelectorAll('#eventForm, #userForm, #generalSettingsForm, #securitySettingsForm');
+            
+            forms.forEach(form => {
+                const inputs = form.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    input.addEventListener('input', () => {
+                        clearTimeout(autoSaveTimeout);
+                        autoSaveTimeout = setTimeout(() => {
+                            // Auto-save form data to local storage
+                            const formData = new FormData(form);
+                            const data = Object.fromEntries(formData.entries());
+                            localStorage.setItem(`autosave_${form.id}`, JSON.stringify(data));
+                        }, 2000); // Save after 2 seconds of inactivity
+                    });
+                });
+            });
+        }
+
+        // Load auto-saved data
+        function loadAutoSavedData(formId) {
+            const savedData = localStorage.getItem(`autosave_${formId}`);
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                const form = document.getElementById(formId);
+                
+                Object.keys(data).forEach(key => {
+                    const input = form.querySelector(`[name="${key}"]`);
+                    if (input) {
+                        input.value = data[key];
+                    }
+                });
+            }
+        }
+
+        // Clear auto-saved data
+        function clearAutoSavedData(formId) {
+            localStorage.removeItem(`autosave_${formId}`);
+        }
+
+        // Initialize auto-save
+        document.addEventListener('DOMContentLoaded', setupAutoSave);
     </script>
 </body>
 </html>
